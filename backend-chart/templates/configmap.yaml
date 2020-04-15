@@ -2,10 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 data:
     NODE_ENV: {{ .Values.env }}
-    # This is for mongodb-replicaset chart
-    # DB_URI: mongodb://{{.Release.Name}}-mongodb-replicaset-0.{{.Release.Name}}-mongodb,{{.Release.Name}}-mongodb-replicaset-1.{{.Release.Name}}-mongodb,{{.Release.Name}}-mongodb-replicaset-2.{{.Release.Name}}-mongodb:27017/
-    # Currently no way to change the MONGODB_ADVERTISED_HOSTNAME for Bitnami MongoDB docker image, so stick with the defaults.
-    DB_URI: mongodb://{{.Release.Name}}-mongodb-primary-0.{{.Release.Name}}-mongodb-headless.{{ .Release.Namespace }}.svc.cluster.local,{{.Release.Name}}-mongodb-secondary-0.{{.Release.Name}}-mongodb-headless.{{ .Release.Namespace }}.svc.cluster.local,{{.Release.Name}}-mongodb-arbiter-0.{{.Release.Name}}-mongodb-headless.{{ .Release.Namespace }}.svc.cluster.local:27017/authorizationdb?replicaSet=rs0
+    DB_URI: mongodb+srv://cluster0-evfkc.mongodb.net/meetqueuedb
     AWS_REGION: {{ .Values.awsRegion }}
 metadata:
     name: {{ .Release.Name }}-config

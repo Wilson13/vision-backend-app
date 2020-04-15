@@ -32,28 +32,4 @@ export function seedDB(): void {
     .catch((err) => {
       log.error("Seeder error: " + err);
     });
-
-  let authServerURL;
-
-  switch (process.env.NODE_ENV) {
-    case DEVELOPMENT_ENV:
-      authServerURL = "https://dev.auth.freshturfengineering.com/auth/verify";
-      break;
-    case STAGING_ENV:
-      authServerURL =
-        "https://staging.auth.freshturfengineering.com/auth/verify";
-      break;
-    case PRODUCTION_ENV:
-      authServerURL = "https://prod.auth.freshturfengineering.com/auth/verify";
-      break;
-  }
-
-  authServer
-    .create({
-      name: "freshturf",
-      url: authServerURL,
-    })
-    .catch((err) => {
-      log.error("Seeder error: " + err);
-    });
 }

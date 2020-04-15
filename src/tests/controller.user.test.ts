@@ -401,117 +401,117 @@ describe("UserController.createUser", () => {
     done();
   });
 
-  it("should create a user with valid body", async (done) => {
-    const body = {
-      email: "test@freshturf.org",
-      firstName: "Test",
-      lastName: "User",
-      phone: {
-        countryCode: "65",
-        number: "12345678",
-      },
-      password: "12345678",
-    };
+  // it("should create a user with valid body", async (done) => {
+  //   const body = {
+  //     email: "test@freshturf.org",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //     phone: {
+  //       countryCode: "65",
+  //       number: "12345678",
+  //     },
+  //     password: "12345678",
+  //   };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
+  //   const res = await request
+  //     .post("/user")
+  //     .send(body)
+  //     .query({
+  //       developerId: developerId,
+  //     })
+  //     .set("Authorization", "Bearer " + token);
 
-    expect(res.status).toBe(httpCode.HTTP_OK);
-    done();
-  });
+  //   expect(res.status).toBe(httpCode.HTTP_OK);
+  //   done();
+  // });
 
-  it("should not create a duplicated user with identical email", async (done) => {
-    const userOne = {
-      email: "test@freshturf.org",
-      firstName: "Test",
-      lastName: "User",
-      phone: {
-        countryCode: "65",
-        number: "12345678",
-      },
-      password: "12345678",
-    };
+  // it("should not create a duplicated user with identical email", async (done) => {
+  //   const userOne = {
+  //     email: "test@freshturf.org",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //     phone: {
+  //       countryCode: "65",
+  //       number: "12345678",
+  //     },
+  //     password: "12345678",
+  //   };
 
-    const userTwo = {
-      email: "test@freshturf.org",
-      firstName: "Test",
-      lastName: "User",
-      phone: {
-        countryCode: "65",
-        number: "87654321",
-      },
-      password: "12345678",
-    };
+  //   const userTwo = {
+  //     email: "test@freshturf.org",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //     phone: {
+  //       countryCode: "65",
+  //       number: "87654321",
+  //     },
+  //     password: "12345678",
+  //   };
 
-    // First create an identical user for testing purpose
-    await request
-      .post("/user")
-      .send(userOne)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
+  //   // First create an identical user for testing purpose
+  //   await request
+  //     .post("/user")
+  //     .send(userOne)
+  //     .query({
+  //       developerId: developerId,
+  //     })
+  //     .set("Authorization", "Bearer " + token);
 
-    const res = await request
-      .post("/user")
-      .send(userTwo)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
+  //   const res = await request
+  //     .post("/user")
+  //     .send(userTwo)
+  //     .query({
+  //       developerId: developerId,
+  //     })
+  //     .set("Authorization", "Bearer " + token);
 
-    expect(res.status).toBe(httpCode.HTTP_CONFLICT);
-    done();
-  });
+  //   expect(res.status).toBe(httpCode.HTTP_CONFLICT);
+  //   done();
+  // });
 
-  it("should not create a duplicated user with identical phone", async (done) => {
-    const userOne = {
-      email: "userone@freshturf.org",
-      firstName: "Test",
-      lastName: "User",
-      phone: {
-        countryCode: "65",
-        number: "12345678",
-      },
-      password: "12345678",
-    };
+  // it("should not create a duplicated user with identical phone", async (done) => {
+  //   const userOne = {
+  //     email: "userone@freshturf.org",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //     phone: {
+  //       countryCode: "65",
+  //       number: "12345678",
+  //     },
+  //     password: "12345678",
+  //   };
 
-    const userTwo = {
-      email: "usertwo@freshturf.org",
-      firstName: "Test",
-      lastName: "User",
-      phone: {
-        countryCode: "65",
-        number: "12345678",
-      },
-      password: "12345678",
-    };
+  //   const userTwo = {
+  //     email: "usertwo@freshturf.org",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //     phone: {
+  //       countryCode: "65",
+  //       number: "12345678",
+  //     },
+  //     password: "12345678",
+  //   };
 
-    // First create an identical user for testing purpose
-    await request
-      .post("/user")
-      .send(userOne)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
+  //   // First create an identical user for testing purpose
+  //   await request
+  //     .post("/user")
+  //     .send(userOne)
+  //     .query({
+  //       developerId: developerId,
+  //     })
+  //     .set("Authorization", "Bearer " + token);
 
-    const res = await request
-      .post("/user")
-      .send(userTwo)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
+  //   const res = await request
+  //     .post("/user")
+  //     .send(userTwo)
+  //     .query({
+  //       developerId: developerId,
+  //     })
+  //     .set("Authorization", "Bearer " + token);
 
-    expect(res.status).toBe(httpCode.HTTP_CONFLICT);
-    done();
-  });
+  //   expect(res.status).toBe(httpCode.HTTP_CONFLICT);
+  //   done();
+  // });
 
   // afterEach(async done => {
   //   done();

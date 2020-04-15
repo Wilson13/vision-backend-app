@@ -1,0 +1,99 @@
+kind: pipeline
+type: docker
+name: Staging Pipeline
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    when:
+      status:
+        - success
+    settings:
+      restore: true
+      pull: if-not-exists
+      mount:
+        - ./node_modules/
+
+  # Need to be run after restore-cache if not ./node_modules
+  # would not have existed and this step will fail.
+  - name: check-version-vulnabilities
+    image: node
+    failure: ignore
+    settings:
+      pull: if-not-exists
+    commands:
+      - npm install
+      - npm outdated
+      - npm audit
+
+  # TODO: Decide if tests are required for Dev deployment, high chance it's only required for Staging and Production.
+  - name: run-test
+    image: node
+    settings:
+      pull: if-not-exists
+    commands:
+      - export TEST_DB_SERVICE=service-mongodb
+      # - sleep 5
+      - npm install
+      - npm test
+
+  - name: prepare-tags
+    image: golang
+    settings:
+      pull: if-not-exists
+    commands:
+      # Version has to be at first line for ftctl to work
+      - echo -n "0.1.0-alpha.1, ${DRONE_BRANCH}, ${DRONE_BRANCH}-${DRONE_COMMIT}" >> .tags
+
+  - name: build-and-push-docker-image
+    image: plugins/docker
+    pull: if-not-exists
+    settings:
+      repo: fthadia/meet-queue
+      # auto_tag: true
+      cache_from:
+        - "fthadia/meet-queue:master"
+        - "fthadia/meet-queue:${DRONE_BRANCH}"
+      username:
+        from_secret: docker_hub_username
+      password:
+        from_secret: docker_hub_password
+      dockerfile: Dockerfile
+
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    settings:
+      rebuild: true
+      pull: if-not-exists
+      mount:
+        - ./node_modules
+
+volumes:
+  - name: cache
+    host:
+      path: /tmp/cache
+
+# image_pull_secrets:
+#   - dockerconfigjson
+trigger:
+  branch:
+    - dev
+    - master
+  event:
+    # pull request is used for master branch (staging), pushing to master is disabled at version control platform (Bitbucket/GitHub)
+    #FIXME: pull_request doesn't work on Bitbucket but push event still gets triggered after a PR merge.
+    - pull_request
+    - push
+    # - promote
+
+services:
+  - name: service-mongodb
+    image: mongo
+    ports:
+      - 27017
