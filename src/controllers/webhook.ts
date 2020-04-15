@@ -48,25 +48,6 @@ export function receiveVerificationCode(): RequestHandler {
         createHttpError(HTTP_BAD_REQUEST, "verificationCode is required.")
       );
 
-    // Find kiosk manager by phone
-    const kioskManagerDoc = await findKioskManagerByPhone(phone);
-
-    // Insert new kiosk manager if it doesn't exist.
-    // There's no need to do anything if it does.
-    if (!kioskManagerDoc) {
-      // Only kioskPhone proeperty is mandatary,
-      // the rest can be fill up by admin.
-      const kioskPhoneDoc = new KioskPhone(req.body.phone);
-      await kioskPhoneDoc.save();
-
-      // Reference phone created earlier
-      const kioskManager = { kioskPhone: kioskPhoneDoc._id };
-      // Create a kiosk manager document
-      const kioskManagerDoc = new KioskManager(kioskManager);
-      // Save KioskManager with newly added KioskPhone's id
-      await kioskManagerDoc.save();
-    }
-
     // URL for exchanging the access token with a verification code
     const authVerifyURL = process.env.AUTH_VERIFY_URI;
     // Check that data is available
@@ -135,6 +116,29 @@ export function receiveVerificationCode(): RequestHandler {
         { kioskPhone: kioskPhoneDoc._id, token: response.data.jwt },
         { upsert: true }
       );
+
+      // Find kiosk manager by phone
+      const kioskManagerDoc = await findKioskManagerByPhone(phone);
+
+      // Insert new kiosk manager if it doesn't exist.
+      // There's no need to do anything if it does.
+      if (!kioskManagerDoc) {
+        // Only kioskPhone proeperty is mandatary,
+        // the rest can be fill up by admin.
+        const kioskPhoneDoc = new KioskPhone(req.body.phone);
+        await kioskPhoneDoc.save();
+
+        // Reference phone created earlier
+        const kioskManager = { kioskPhone: kioskPhoneDoc._id };
+        // Create a kiosk manager document
+        const kioskManagerDoc = new KioskManager(kioskManager);
+        kioskManagerDoc.accessToken = response.data.jwt;
+        // Save KioskManager with newly added KioskPhone's id
+        await kioskManagerDoc.save();
+      } else {
+        kioskManagerDoc.accessToken = response.data.jwt;
+        await kioskManagerDoc.save();
+      }
 
       // Send response to auth server about successfully receiving the access
       // token, no need to attach the token as this API is not part of CRUD APIs.
