@@ -63,7 +63,16 @@ spec:
                 configMapKeyRef:
                   name: {{.Release.Name}}-config
                   key: AUTH_REDIRECT_URI
-
+            - name: AUTH_API_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_API_TOKEN
+            - name: AUTH_DEVELOPER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_DEVELOPER_ID
           ports:
           - containerPort: {{ .Values.service.targetPort }}
           # volumeMounts:
