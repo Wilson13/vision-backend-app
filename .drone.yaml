@@ -88,9 +88,9 @@ trigger:
   event:
     # pull request is used for master branch (staging), pushing to master is disabled at version control platform (Bitbucket/GitHub)
     #FIXME: pull_request doesn't work on Bitbucket but push event still gets triggered after a PR merge.
-    - pull_request
-    - push
-    # - promote
+    # - pull_request
+    # - push
+    - promote
 
 services:
   - name: service-mongodb
