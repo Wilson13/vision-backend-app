@@ -46,7 +46,7 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.env }}-secret
+                  name: {{ .Release.Name }}-secret
                   key: mongodb-password
             - name: AWS_REGION
               valueFrom:
@@ -56,12 +56,12 @@ spec:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                   secretKeyRef:
-                    name: {{ .Values.env }}-secret
+                    name: {{ .Release.Name }}-secret
                     key: aws-access-key-id
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                   secretKeyRef:
-                    name: {{ .Values.env }}-secret
+                    name: {{ .Release.Name }}-secret
                     key: aws-secret-access-key
           ports:
           - containerPort: {{ .Values.service.targetPort }}

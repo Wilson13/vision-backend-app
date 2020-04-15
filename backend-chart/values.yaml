@@ -4,7 +4,7 @@ image:
   repository: fthadia/meet-queue
   tag: 0.1.0-alpha.1
   pullPolicy: Always
-  configName: auth-env-config
+  configName: meet-queue-config
 imagePullSecrets: []
 dnsPolicy: ClusterFirst
 nameOverride: ''
@@ -21,7 +21,7 @@ service:
   port: 80
   targetPort: 3000
 ingress:
-  name: auth-ingress
+  name: meet-queue-ingress
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -36,13 +36,13 @@ ingress:
   tls:
     - hosts:
         - api.queue.freshturfengineering.com
-      secretName: auth-server-tls
+      secretName: meet-queue-tls
 resources: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
 initialDelaySeconds: 5
-authServerUrl: 'http://dev.auth.freshturfengineering.com/oauth/verify'
+authServerUrl: 'http://staging.auth.freshturfengineering.com/oauth/verify'
 createSecret: true
 dbEnabled: false
 mongodb:
