@@ -16,7 +16,7 @@
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       ".deployment/",
-      "/staging-auth-chart/",
+      "/backend-chart/",
       "/test/",
       "utils/",
       "/node_modules/"
