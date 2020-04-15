@@ -3,6 +3,8 @@ kind: ConfigMap
 data:
     NODE_ENV: {{ .Values.env }}
     DB_URI: mongodb+srv://cluster0-evfkc.mongodb.net/meetqueuedb
-    AWS_REGION: {{ .Values.awsRegion }}
+    AUTH_AUTHORIZE_URI: https://staging.auth.freshturfengineering.com/oauth/authorize/
+    AUTH_VERIFY_URI: https://staging.auth.freshturfengineering.com/oauth/verify
+    AUTH_REDIRECT_URI: https://staging.auth.freshturfengineering.com/webhook/login
 metadata:
     name: {{ .Release.Name }}-config

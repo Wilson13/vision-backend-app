@@ -48,6 +48,21 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-secret
                   key: mongodb-password
+            - name: AUTH_AUTHORIZE_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_AUTHORIZE_URI
+            - name: AUTH_VERIFY_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_VERIFY_URI
+            - name: AUTH_REDIRECT_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_REDIRECT_URI
 
           ports:
           - containerPort: {{ .Values.service.targetPort }}
