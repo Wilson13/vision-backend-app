@@ -1,7 +1,7 @@
 env: dev
 replicaCount: 1
 image:
-  repository: ftwilson/auth-server
+  repository: fthadia/meet-queue
   tag: 0.1.0-alpha.1
   pullPolicy: Always
   configName: auth-env-config
@@ -16,7 +16,7 @@ podSecurityContext: {}
 securityContext: {}
 service:
   enabled: false
-  name: auth-service
+  name: meet-queue-service
   type: ClusterIP
   port: 80
   targetPort: 3000
@@ -27,15 +27,15 @@ ingress:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
-    - name: dev.auth.freshturfengineering.com
+    - name: api.queue.freshturfengineering.com
       paths:
         - path: /
           backend:
-            serviceName: auth-service
+            serviceName: meet-queue-service
             servicePort: 80
   tls:
     - hosts:
-        - dev.auth.freshturfengineering.com
+        - api.queue.freshturfengineering.com
       secretName: auth-server-tls
 resources: {}
 nodeSelector: {}
@@ -44,13 +44,13 @@ affinity: {}
 initialDelaySeconds: 5
 authServerUrl: 'http://dev.auth.freshturfengineering.com/oauth/verify'
 createSecret: true
-dbEnabled: true
+dbEnabled: false
 mongodb:
   replicaSet:
     enabled: true
-  existingSecret: dev-secret
-  mongodbDatabase: authorizationdb
-  mongodbUsername: dbuser
+  existingSecret: meet-queue-secret
+  mongodbDatabase: meetqueuedb
+  mongodbUsername: meet-queue-db-admin
   ingress:
     enabled: true
     annotations:
