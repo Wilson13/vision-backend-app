@@ -2,7 +2,7 @@ env: dev
 replicaCount: 1
 image:
   repository: ftwilson/auth-server
-  tag: 0.1.0-alpha.28
+  tag: 0.1.0-alpha.1
   pullPolicy: Always
   configName: auth-env-config
 imagePullSecrets: []
