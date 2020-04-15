@@ -81,7 +81,6 @@ volumes:
 
 # image_pull_secrets:
 #   - dockerconfigjson
-
 trigger:
   branch:
     - dev
