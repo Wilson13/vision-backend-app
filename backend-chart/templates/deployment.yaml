@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auth-chart.fullname" . }}
+  labels:
+    {{- include "auth-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "auth-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "auth-chart.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      serviceAccountName: {{ include "auth-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: NODE_ENV
+            - name: DB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: DB_URI
+            - name: DB_USER
+              value: {{ .Values.mongodb.mongodbUsername }}
+            #TODO: Name of secret should change depending on environment, 
+            # need to create different sealed secrets for them.
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env }}-secret
+                  key: mongodb-password
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AWS_REGION
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.env }}-secret
+                    key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.env }}-secret
+                    key: aws-secret-access-key
+          ports:
+          - containerPort: {{ .Values.service.targetPort }}
+          # volumeMounts:
+          # - name: {{ .Values.image.mountName }}
+          #   mountPath: {{ .Values.image.mountPath }}
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: {{ .Values.service.targetPort }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: {{ .Values.service.targetPort }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.initialDelaySeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}      
+      {{- with .Values.nodeSelector }}
+      restartPolicy: Never
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

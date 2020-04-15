@@ -1,0 +1,30 @@
+# version: '3'
+#   services:
+#     dev:
+#       image: node:11
+#       volumes:
+#         - .:/usr/src/aws-rekognition
+#       working_dir: /Users/wilson/Documents/Fresh Turf/medical_project/aws-rekognition
+
+version: "3.1"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #command: npm run start
+    image: ftwilson/auth-server:latest
+    container_name: authorizationjs
+    env_file: .env
+    environment:
+      NODE_ENV: dev-docker
+      # Using the same DB as Rekognition service for now
+      DB_URI: mongodb+srv://rekUser:h7Wmm2fQanGzUW5P@cluster0-wx5an.gcp.mongodb.net/authenticationdb
+      DO_TOKEN: 0bf97f1873acd45223e8cdc1c7d28f1b0139c67ae08360d7f1883ec08e488e2c
+    ports:
+      - "80:3000"
+    volumes:
+      - .:/user/src/authorization-server
+      - /usr/src/authorization-server/node_modules
+    #working_dir: /Users/wilson/Documents/Fresh\ Turf/medical_project/aws-rekognition

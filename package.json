@@ -1,0 +1,72 @@
+{
+  "name": "authentication-server",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "debug": "NODE_ENV=dev && ts-node src/bin/www.ts",
+    "start": "NODE_ENV=production && tsc && node dist/bin/www.js",
+    "tsc": "tsc && cp -R src/views dist/",
+    "test-coverage": "jest --coverage",
+    "test": "jest --forceExit",
+    "test-watch": "jest --watch",
+    "test-verbose": "jest --verbose"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      ".deployment/",
+      "/staging-auth-chart/",
+      "/test/",
+      "utils/",
+      "/node_modules/"
+    ]
+  },
+  "dependencies": {
+    "@types/bcrypt": "^3.0.0",
+    "@types/debug": "^4.1.5",
+    "@types/express": "^4.17.4",
+    "@types/http-errors": "^1.6.3",
+    "@types/jest": "^25.1.5",
+    "@types/jsonwebtoken": "^8.3.8",
+    "@types/mongoose": "^5.7.8",
+    "@types/multer": "^1.4.2",
+    "@types/node": "^13.11.0 ",
+    "@types/supertest": "^2.0.8",
+    "@types/uuid": "^7.0.2",
+    "@types/validator": "^12.0.1",
+    "aws-sdk": "^2.652.0",
+    "axios": "^0.19.2",
+    "bcrypt": "^4.0.1",
+    "cookie-parser": "~1.4.5",
+    "debug": "~4.1.1",
+    "dotenv": "^8.2.0",
+    "express": "~4.17.1",
+    "express-healthcheck": "^0.1.0",
+    "helmet": "^3.22.0",
+    "http-errors": "~1.7.3",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.7",
+    "morgan": "~1.10.0",
+    "multer": "^1.4.2",
+    "pug": "^2.0.4",
+    "typescript": "^3.8.3",
+    "uuid": "^7.0.3",
+    "validator": "^13.0.0",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "acorn": "^7.1.1",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-prettier": "^3.1.2",
+    "jest": "^25.2.6",
+    "prettier": "^2.0.2",
+    "supertest": "^4.0.2",
+    "ts-jest": "^25.3.0",
+    "ts-node": "^8.8.1"
+  }
+}

@@ -1,0 +1,64 @@
+env: production
+replicaCount: 1
+image:
+  repository: ftwilson/auth-server
+  tag: 0.1.0-alpha.26
+  pullPolicy: Always
+  configName: auth-env-config
+imagePullSecrets: []
+dnsPolicy: ClusterFirst
+nameOverride: ""
+fullnameOverride: ""
+serviceAccount:
+  create: false
+  name: default
+podSecurityContext: {}
+securityContext: {}
+service:
+  enabled: false
+  name: auth-service
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+ingress:
+  name: auth-ingress
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: prod.auth.freshturfengineering.com
+      paths:
+        - path: /
+          backend:
+            serviceName: auth-service
+            servicePort: 80
+  tls:
+    - hosts:
+        - prod.auth.freshturfengineering.com
+      secretName: auth-server-tls
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+initialDelaySeconds: 5
+authServerUrl: http://auth.freshturfengineering.com/oauth/verify
+createSecret: true
+dbEnabled: true
+mongodb:
+  replicaSet:
+    enabled: true
+  existingSecret: prod-secret
+  mongodbDatabase: authorizationdb
+  mongodbUsername: dbuser
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: 'true'
+    hosts:
+      - name: prod.mongodb.freshturfengineering.com
+    tls:
+      - hosts:
+          - prod.mongodb.freshturfengineering.com
+  awsRegion: ap-southeast-1

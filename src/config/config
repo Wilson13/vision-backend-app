@@ -1,0 +1,18 @@
+# NOT IN USED FOR NOW
+
+NODE_ENV=production
+#development
+PORT=3000
+# Set your database/API connection information here
+#API_KEY=**************************
+#API_URL=**************************
+#RSA_PASS_PHRASE=2909484189
+
+#DEV_DB_NAME=authenticationdb
+#DEV_DB_PATH=mongodb://localhost/
+
+DB_NAME=authenticationdb
+DB_PATH=mongodb+srv://rekUser:h7Wmm2fQanGzUW5P@cluster0-wx5an.gcp.mongodb.net/
+
+#DO_ACCESS_TOKEN=45dbf37b1f25ae4d67f78e008e12797610ef7d6240d444849f0e7e59c3f40b9e
+#DO_PASSWORD=dopassword
