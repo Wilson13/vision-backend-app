@@ -5,7 +5,8 @@ image:
   tag: 0.1.0-alpha.1
   pullPolicy: Always
   configName: meet-queue-config
-imagePullSecrets: []
+imagePullSecrets: 
+  - name: docker-hub-secret
 dnsPolicy: ClusterFirst
 nameOverride: ''
 fullnameOverride: ''
