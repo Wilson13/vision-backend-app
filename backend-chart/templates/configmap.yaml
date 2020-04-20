@@ -6,6 +6,7 @@ data:
     AUTH_AUTHORIZE_URI: https://staging.auth.freshturfengineering.com/oauth/authorize/
     AUTH_VERIFY_URI: https://staging.auth.freshturfengineering.com/oauth/verify
     AUTH_REDIRECT_URI: https://api.queue.freshturfengineering.com/webhook/login
+    AUTH_OTP_URI: https://api.queue.freshturfengineering.com/oauth/otp
     AUTH_API_TOKEN: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZlbG9wZXJJZCI6IndpbHNvbiJ9.flzTtU3ingYjT3AOBOGFxUqEPx2D_vAVutxwzFYqPK1I4gySKwQf52SHmOCbwKRbdaU0XbrRLlZtXFnhM6THYg
     AUTH_DEVELOPER_ID: wilson
 metadata:
