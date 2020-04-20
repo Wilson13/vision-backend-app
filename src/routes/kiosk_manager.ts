@@ -11,6 +11,9 @@ router.get("/", verifyAPIKey(), kioskManagerController.getKioskManagers()); //as
 // Authorizing (signing in) does not require API token
 router.post("/authorize", kioskManagerController.authorizeKioskManager());
 
+// Requesting for OTP
+router.post("/otp", kioskManagerController.sendOTP());
+
 router.delete("/", verifyAPIKey(), kioskManagerController.deleteKioskManager());
 
 //module.exports = router;

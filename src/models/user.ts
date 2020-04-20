@@ -3,6 +3,7 @@ import { HTTP_CONFLICT } from "../utils/constants";
 import Phone from "./phone";
 import { CustomError } from "../utils/helper";
 import { BaseSchema } from "./base_schema";
+import { v4 as uuidv4 } from "uuid";
 
 export interface UserInterface extends Document {
   nric: string;
@@ -10,6 +11,7 @@ export interface UserInterface extends Document {
   dob: Date;
   race: string;
   gender: string;
+  language: string;
   noOfChildren: number;
   maritalStatus: string;
   occupation: string;
@@ -25,13 +27,23 @@ export interface UserInterface extends Document {
   accessToken: string;
   verificationCode: string;
   authServer: string;
+  uid: string;
 }
 
 const UserSchema: Schema = new Schema({
   ...BaseSchema.obj,
+  nric: String,
+  name: { type: String, required: true },
+  dob: Date,
+  race: { type: String, required: true },
+  gender: { type: String, required: true },
+  launguage: String,
+  noOfChildren: Number,
+  maritalStatus: { type: String, required: true },
+  occupation: { type: String, required: true },
+  phone: { type: Schema.Types.ObjectId, ref: "Phone", required: true },
   email: {
     type: String,
-    required: [true, "Your email address cannot be blank."],
     unique: true,
     validate: [
       function (email): boolean {
@@ -41,14 +53,6 @@ const UserSchema: Schema = new Schema({
       "The e-mail format is wrong.",
     ],
   },
-  name: { type: String, required: true },
-  dob: Date,
-  race: { type: String, required: true },
-  gender: { type: String, required: true },
-  noOfChildren: Number,
-  maritalStatus: { type: String, required: true },
-  occupation: { type: String, required: true },
-  phone: { type: Schema.Types.ObjectId, ref: "Phone", required: true },
   postalCode: Number,
   blockHseNo: { type: String, required: true },
   floorNo: String,
@@ -59,6 +63,11 @@ const UserSchema: Schema = new Schema({
   accessToken: String,
   verificationCode: String,
   authServer: String,
+  uid: {
+    type: String,
+    unique: true,
+    default: uuidv4,
+  },
 });
 
 UserSchema.post<UserInterface>("save", function (err, doc, next) {

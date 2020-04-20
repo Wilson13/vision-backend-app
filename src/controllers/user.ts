@@ -3,7 +3,7 @@ import Phone, { PhoneInterface } from "../models/phone";
 import asyncHandler from "../utils/async_handler";
 import { RequestHandler } from "express";
 import { apiResponse, CustomError } from "../utils/helper";
-import { HTTP_BAD_REQUEST, HTTP_OK } from "../utils/constants";
+import { HTTP_BAD_REQUEST, HTTP_OK, HTTP_NOT_FOUND } from "../utils/constants";
 import { Error } from "mongoose";
 import { validatePhone } from "./phone";
 import validator from "validator";
@@ -23,6 +23,20 @@ export async function findUserByPhone(
   return User.findOne({ phone: phoneDoc._id });
 }
 
+export function validateNRIC(nric: string): CustomError {
+  const nricRegex = /^(S|T|F|G)\d{7}.$/;
+
+  if (!nric)
+    return new CustomError(HTTP_BAD_REQUEST, "nric is required", {
+      nric: nric,
+    });
+  else if (!nricRegex.test(nric))
+    return new CustomError(HTTP_BAD_REQUEST, "nric format is wrong", {
+      nric: nric,
+    });
+  else return null;
+}
+
 /**
  * This function was created to keep input validation outside of models,
  * which resulted in it being required in multiple places. Reason for not
@@ -31,21 +45,33 @@ export async function findUserByPhone(
  * rather than 500 INTERNAL SERVER ERROR that will be returned upon main app.ts
  * error capturing mechanism. In summary, it's an active error handling.
  *
- * @param phone PhoneInterface
+ * @param user UserInterface
  * @returns CustomError
  */
 export function validateUser(user: UserInterface): CustomError {
   if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
-  else if (!user.email || !user.name || !user.phone)
+  else if (
+    !user.nric ||
+    !user.email ||
+    !user.name ||
+    !user.phone ||
+    !user.race ||
+    !user.gender ||
+    !user.maritalStatus ||
+    !user.occupation ||
+    !user.blockHseNo ||
+    !user.address ||
+    !user.flatType
+  ) {
     return new CustomError(
       HTTP_BAD_REQUEST,
-      "email, name, phone is required",
+      "nric, email, name, phone, race, gender, maritalStatus, occupation, blockHseNo, address, flatType are required",
       user
     );
-  else if (!validator.isEmail(user.email))
+  } else if (validateNRIC(user.nric)) {
+    return validateNRIC(user.nric);
+  } else if (!validator.isEmail(user.email))
     return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
-  else if (validator.isEmpty(user.name))
-    return new CustomError(HTTP_BAD_REQUEST, "name is required", user);
   else return null;
 }
 
@@ -95,77 +121,48 @@ export function createUser(): RequestHandler {
   });
 }
 
-// export function deleteUser(): RequestHandler {
-//   return asyncHandler(async (req, res, next) => {
-//     if (!req.body.email) return next(new Error("Email is required"));
-
-//     const email = req.body.email;
-//     const result = await User.findOneAndDelete({ email }); // Phone associated is deleted in post remove hook
-
-//     if (result)
-//       res.send(
-//         apiResponse(HTTP_OK, `User "${email}" delete successfully`, email)
-//       );
-//     else {
-//       res
-//         .status(HTTP_BAD_REQUEST)
-//         .json(
-//           apiResponse(
-//             HTTP_BAD_REQUEST,
-//             `Something went wrong, user "${email}" not deleted.`,
-//             email
-//           )
-//         );
-//     }
-//   });
-// }
-
 // This function error handler is handled by asyncHandler that calls it
-
 export function deleteUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    let result, email, phone, phoneStr;
-    if (req.body.email) {
-      email = req.body.email;
-      // Delete user with email
-      // Phone associated is deleted in post findOneAndDelete hook
-      result = await User.findOneAndDelete({ email: email });
-    } else if (req.body.phone) {
-      phone = req.body.phone;
-      phoneStr = JSON.stringify(phone).replace(/[\\|\"]/g, "'");
+    let result, msg, status, data;
 
-      // Return error if validation of phone fails
-      const err = validatePhone(phone);
-      if (err) return next(err);
-      // Search for user
-      const userDoc: UserInterface = await findUserByPhone(phone);
-      // Return error if user was not found
-      if (!userDoc)
-        return next(
-          new CustomError(HTTP_BAD_REQUEST, "User not found", req.body)
-        );
-      // Delete user with phone
-      // Phone associated is deleted in post findOneAndDelete hook
-      result = await User.findOneAndDelete({ phone: userDoc.phone });
+    if (req.params?.uid) {
+      result = await User.findOneAndDelete({ uid: req.params.uid }).exec();
+
+      if (result) {
+        status = HTTP_OK;
+        msg = `User '${result.nric}' delete successfully`;
+        data = result;
+      } else {
+        status = HTTP_BAD_REQUEST;
+        msg = `Something went wrong, user not deleted.`;
+        data = { uid: req.params.uid };
+      }
+
+      // Since this statement is used for both success and failure of deletion,
+      // status needs to be explicitly stated for the case of failure.
+      res.status(status).send(apiResponse(status, msg, data));
     } else {
-      return next(new Error("Email or phone is required"));
+      return next(new Error("DELETE /user/:uid/ is required"));
     }
+  });
+}
 
-    if (result) {
-      const message = email
-        ? `User '${email}' delete successfully`
-        : `User '${phoneStr}' delete successfully`;
-      const data = email ? email : phone;
-      res.send(apiResponse(HTTP_OK, message, data));
-    } else {
-      const message = email
-        ? `Something went wrong, user '${email}' not deleted.`
-        : `Something went wrong, user '${phoneStr}' not deleted.`;
-      const data = email ? email : phone;
+// Search for a user, POST method is used for form submit etc.
+export function searchUser(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    const nric = req.body.nric;
 
-      res
-        .status(HTTP_BAD_REQUEST)
-        .json(apiResponse(HTTP_BAD_REQUEST, message, data));
+    // Return error if validation fails
+    const err = validateNRIC(nric);
+    if (err) return next(err);
+
+    // Search for user with NRIC
+    const userDoc = await User.findOne({ nric: nric }, { _id: 0, __v: 0 });
+    if (!userDoc)
+      return next(new CustomError(HTTP_NOT_FOUND, "User not found.", req.body));
+    else {
+      return res.send(apiResponse(HTTP_OK, "User found.", userDoc));
     }
   });
 }

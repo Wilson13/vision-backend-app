@@ -233,3 +233,58 @@ export function deleteKioskManager(): RequestHandler {
     }
   });
 }
+
+export function sendOTP(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    // JavaScript object destructuring
+    const kioskPhone = req.body.kioskPhone;
+
+    // Return error if validation of phone fails
+    const err = validateKioskPhone(kioskPhone);
+    if (err) return next(err);
+
+    const otpURI = process.env.AUTH_OTP_URI;
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + process.env.AUTH_API_TOKEN,
+      },
+      params: {
+        developerId: process.env.AUTH_DEVELOPER_ID,
+      },
+    };
+
+    try {
+      // Send OTP request to auth server
+      const sendOtpResponse = await Axios.post(
+        otpURI,
+        { phone: kioskPhone },
+        config
+      );
+
+      // Get complete response data
+      const response = sendOtpResponse?.data;
+      if (response.status !== HTTP_OK)
+        return next(
+          new CustomError(
+            HTTP_INTERNAL_SERVER_ERROR,
+            "Authorization failed.",
+            response
+          )
+        );
+      // OTP successfully requested
+      return res.send(apiResponse(HTTP_OK, "OTP sent.", null));
+    } catch (err) {
+      const returnData = isNullOrUndefined(err.response?.data)
+        ? err.message
+        : err.response.data;
+      return next(
+        new CustomError(
+          HTTP_INTERNAL_SERVER_ERROR,
+          "Authorization failed.",
+          returnData
+        )
+      );
+    }
+  });
+}

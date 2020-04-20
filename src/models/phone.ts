@@ -15,13 +15,13 @@ export const PhoneSchema: Schema = new Schema({
     required: true,
     unique: true,
     validate: [
-      function(phone): boolean {
+      function (phone): boolean {
         const phoneRegex = /^(\d{8})?$/;
         return phoneRegex.test(phone);
       },
-      "phone.number needs to be 8-digit long."
-    ]
-  }
+      "phone.number needs to be 8-digit long.",
+    ],
+  },
 });
 
 // Compund index
