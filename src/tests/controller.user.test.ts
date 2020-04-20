@@ -14,7 +14,6 @@ import User from "../models/user";
 const request = supertest(app);
 const dbService = process.env.TEST_DB_SERVICE;
 const databaseName = "testDB";
-const developerId = "tester";
 
 /**
  * FIXME:
@@ -94,17 +93,13 @@ describe("UserController.createUser", () => {
   });
 
   it("should not create a user with missing body", async (done) => {
-    const res = await request.post("/user").query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user");
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
 
   it("should not create a user with empty body", async (done) => {
-    const res = await request.post("/user").send({}).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send({});
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -120,9 +115,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -139,9 +132,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -158,9 +149,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -173,9 +162,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -189,9 +176,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -207,9 +192,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -226,9 +209,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -244,9 +225,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -263,9 +242,7 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request.post("/user").send(body).query({
-      developerId: developerId,
-    });
+    const res = await request.post("/user").send(body);
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
