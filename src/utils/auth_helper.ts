@@ -5,7 +5,7 @@ import fs from "fs";
 import { generateKeyPairSync, KeyPairSyncResult } from "crypto";
 import Key from "../models/key";
 import asyncHandler from "./async_handler";
-import { HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED } from "./constants";
+import { HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, TEST_ENV } from "./constants";
 import { RequestHandler } from "express";
 // import logger from "./logger";
 
@@ -101,6 +101,11 @@ export function verifyAPIKey(): RequestHandler {
 // When acting as, or being a resource server, there should be a machanism for saving the public key.
 export function verifyJwt(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
+    // Don't require bearer token if tests are runing, so
+    // no actual private key is required to generate the token
+    // nor any Auth API calls is required to retrieve the token.
+    if (process.env.NODE_ENV === TEST_ENV) return next();
+
     let bearerToken;
 
     // Check and get bearer token

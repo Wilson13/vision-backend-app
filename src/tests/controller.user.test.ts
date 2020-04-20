@@ -6,50 +6,15 @@ import app from "../app";
 import logger from "../utils/logger";
 import Key from "../models/key";
 import Phone from "../models/phone";
-import { generateJwt } from "../utils/auth_helper";
 import { getUsers, createUser } from "../controllers/user";
 
 import * as httpCode from "../utils/constants";
 import User from "../models/user";
 
 const request = supertest(app);
-// Test key can be swapped out with any valid RSA key
-// and can be changed to read from text file if preferred.
-const testKey = {
-  public: [
-    "-----BEGIN PUBLIC KEY-----",
-    "MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgHkNUG05cHnCiWRf1GqV4IBMAiTV",
-    "uL3Ao/V0QjKEfIyCVjPjofZpd6yaE4avS87vfHSzKWDs0wDmTJHVNKuWfttea31C",
-    "Pk6jT4Q6FdCcOUhlJgpKHp8FbtGiybdqNUKKSckppAB4MrbNSpELC0ojqXDvQWeW",
-    "isjIvdl8J8uH5MO3AgMBAAE=",
-    "-----END PUBLIC KEY-----",
-  ],
-  private: [
-    "-----BEGIN RSA PRIVATE KEY-----",
-    "MIICWwIBAAKBgHkNUG05cHnCiWRf1GqV4IBMAiTVuL3Ao/V0QjKEfIyCVjPjofZp",
-    "d6yaE4avS87vfHSzKWDs0wDmTJHVNKuWfttea31CPk6jT4Q6FdCcOUhlJgpKHp8F",
-    "btGiybdqNUKKSckppAB4MrbNSpELC0ojqXDvQWeWisjIvdl8J8uH5MO3AgMBAAEC",
-    "gYAGnrPHRVzhS8I3uwXizk94tK9pVEbGGcLdqX31RUmKZZZRQCGbWCkzRznKI8wB",
-    "hRdJSoL4yfrAEdgeIYq/13sYcM92eKy+ZUQ+dwBwFLXw9GML85WHAW9TZYuW3i+6",
-    "euV12RS/9bhPuMef74YjqaiuMb89eRGBExnyAyPE2JlgAQJBALN23eDrLs84z8yS",
-    "C18LRNKOC8WxldiyT+Fy37n1zbdb/CW6h4/F0xNZH2AaBOc6vIyt/SqhV8u4e+Iq",
-    "V38N7U8CQQCsrT7MhgxBnUuf4PqV5HdoBa8vv7U/tnKM1xlGokQQpb9nufgo+jcT",
-    "tEADpsHSaG3tC3ivadwWhQAYbysmrjkZAkBFdWsYw02hrFZY0emOxpjDeXC6+imJ",
-    "7jGWi1Rl7+nH3tUvcQtIrQMtyN+o3UkqiYQyWqDSoBGP6n4gIc0tgqFnAkEApZNy",
-    "FjerZPdpXqMiZbyvasWYmJahO7i82qQfDoXl8nicst+2P8S+L1y1zUqHrDSKw7Qu",
-    "QzWk3sslrkha/jotcQJABqCt9qLkok9xsrjOwrGyIruPdadJ2Ib3OY3r3+9rVc+y",
-    "0FA8StFBAwNrbY3EFfddrQwzLxTa8/1DSJX4hqI20Q==",
-    "-----END RSA PRIVATE KEY-----",
-  ],
-  developerId: "tester",
-};
 const dbService = process.env.TEST_DB_SERVICE;
 const databaseName = "testDB";
 const developerId = "tester";
-
-const privateKeyArr = testKey.private;
-const privateKey = privateKeyArr.join("\n");
-let token;
 
 /**
  * FIXME:
@@ -67,12 +32,6 @@ beforeAll(async () => {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 500, // Keep trying to send operations for 5 seconds
     });
-
-    // Save key into test DB
-    await Key.create(testKey);
-
-    // Generate JWT Token
-    token = await generateJwt(privateKey, "developerId", developerId, -1);
   } catch (err) {
     logger.info(err);
     process.exitCode = 0;
@@ -115,21 +74,6 @@ describe("UserController.getusers", () => {
     expect(typeof getUsers).toBe("function");
   });
 
-  it("should require a bearer token", async (done) => {
-    const res = await request.get("/user");
-    expect(res.status).toBe(httpCode.HTTP_UNAUTHORIZED);
-    done();
-  });
-
-  it("should require a developer ID", async (done) => {
-    const res = await request
-      .get("/user")
-      .set("Authorization", "Bearer " + token);
-
-    expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
-    done();
-  });
-
   it("should return with empty list of user", async (done) => {
     const expectResult = {
       status: httpCode.HTTP_OK,
@@ -137,13 +81,7 @@ describe("UserController.getusers", () => {
       data: [],
     };
 
-    const res = await request
-      .get("/user")
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.get("/user");
     expect(res.status).toBe(httpCode.HTTP_OK);
     expect(res.body).toEqual(expectResult);
     done();
@@ -155,42 +93,18 @@ describe("UserController.createUser", () => {
     expect(typeof createUser).toBe("function");
   });
 
-  it("should require a bearer token", async (done) => {
-    const res = await request.get("/user");
-    expect(res.status).toBe(httpCode.HTTP_UNAUTHORIZED);
-    done();
-  });
-
-  it("should require a developer ID", async (done) => {
-    const res = await request
-      .post("/user")
-      .set("Authorization", "Bearer " + token);
-
-    expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
-    done();
-  });
-
   it("should not create a user with missing body", async (done) => {
-    const res = await request
-      .post("/user")
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
 
   it("should not create a user with empty body", async (done) => {
-    const res = await request
-      .post("/user")
-      .send({})
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send({}).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -206,14 +120,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -230,14 +139,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -254,14 +158,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -274,14 +173,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -295,14 +189,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -318,14 +207,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -342,14 +226,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -365,14 +244,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -389,14 +263,9 @@ describe("UserController.createUser", () => {
       password: "12345678",
     };
 
-    const res = await request
-      .post("/user")
-      .send(body)
-      .query({
-        developerId: developerId,
-      })
-      .set("Authorization", "Bearer " + token);
-
+    const res = await request.post("/user").send(body).query({
+      developerId: developerId,
+    });
     expect(res.status).toBe(httpCode.HTTP_BAD_REQUEST);
     done();
   });
@@ -419,7 +288,7 @@ describe("UserController.createUser", () => {
   //     .query({
   //       developerId: developerId,
   //     })
-  //     .set("Authorization", "Bearer " + token);
+  //     ;
 
   //   expect(res.status).toBe(httpCode.HTTP_OK);
   //   done();
@@ -455,7 +324,7 @@ describe("UserController.createUser", () => {
   //     .query({
   //       developerId: developerId,
   //     })
-  //     .set("Authorization", "Bearer " + token);
+  //     ;
 
   //   const res = await request
   //     .post("/user")
@@ -463,7 +332,7 @@ describe("UserController.createUser", () => {
   //     .query({
   //       developerId: developerId,
   //     })
-  //     .set("Authorization", "Bearer " + token);
+  //     ;
 
   //   expect(res.status).toBe(httpCode.HTTP_CONFLICT);
   //   done();
@@ -499,7 +368,7 @@ describe("UserController.createUser", () => {
   //     .query({
   //       developerId: developerId,
   //     })
-  //     .set("Authorization", "Bearer " + token);
+  //     ;
 
   //   const res = await request
   //     .post("/user")
@@ -507,7 +376,7 @@ describe("UserController.createUser", () => {
   //     .query({
   //       developerId: developerId,
   //     })
-  //     .set("Authorization", "Bearer " + token);
+  //     ;
 
   //   expect(res.status).toBe(httpCode.HTTP_CONFLICT);
   //   done();
