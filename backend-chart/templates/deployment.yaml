@@ -68,6 +68,11 @@ spec:
                 configMapKeyRef:
                   name: {{.Release.Name}}-config
                   key: AUTH_API_TOKEN
+            - name: AUTH_OTP_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AUTH_OTP_URI
             - name: AUTH_DEVELOPER_ID
               valueFrom:
                 configMapKeyRef:
