@@ -14,6 +14,7 @@ import errorResponse from "./utils/error_json";
 
 import indexRouter from "./routes/index";
 import usersRouter from "./routes/user";
+import caseRouter from "./routes/case";
 import kioskManagerRouter from "./routes/kiosk_manager";
 import phonesRouter from "./routes/phone";
 import kioskPhonesRouter from "./routes/kiosk_phone";
@@ -61,6 +62,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/face", faceRouter);
 app.use("/user", usersRouter);
+app.use("/case", caseRouter);
 app.use("/phone", phonesRouter);
 app.use("/kiosk/manager", kioskManagerRouter);
 app.use("/kiosk/phone", kioskPhonesRouter);

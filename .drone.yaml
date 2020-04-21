@@ -46,7 +46,7 @@ steps:
       pull: if-not-exists
     commands:
       # Version has to be at first line for ftctl to work
-      - echo -n "0.1.0-alpha.3, ${DRONE_BRANCH}, ${DRONE_BRANCH}-${DRONE_COMMIT}" >> .tags
+      - echo -n "0.1.0-alpha.4, ${DRONE_BRANCH}, ${DRONE_BRANCH}-${DRONE_COMMIT}" >> .tags
 
   - name: build-and-push-docker-image
     image: plugins/docker
@@ -88,8 +88,8 @@ trigger:
   event:
     # pull request is used for master branch (staging), pushing to master is disabled at version control platform (Bitbucket/GitHub)
     #FIXME: pull_request doesn't work on Bitbucket but push event still gets triggered after a PR merge.
-    # - pull_request
-    # - push
+    - pull_request
+    - push
     - promote
 
 services:

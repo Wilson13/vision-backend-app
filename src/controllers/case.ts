@@ -13,8 +13,8 @@ import {
   HTTP_OK,
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
+  GET_LIMIT as GET_LIST_LIMIT,
 } from "../utils/constants";
-import { validatePhone } from "./phone";
 
 export async function findUserByPhone(
   userPhone: PhoneInterface
@@ -98,67 +98,41 @@ export function validateUser(user: UserInterface): CustomError {
   else return null;
 }
 
-// Display list of all Users.
-export function getUsers(): RequestHandler {
-  // Requires the export function remain as function not a middleware
-  // so we can wrap asyncHandler here instead of at /routes level.
-
-  // Meaning we can do
-  // router.get('/',  getUsers());
-  // instead of
-  // router.get('/',  asyncHandler(getUsers));
+// Display list of Case.
+export function getCases(): RequestHandler {
   return asyncHandler(async (req, res) => {
-    const userDocs = await User.find({}, { _id: 0, __v: 0 })
-      .populate("phone")
-      .exec();
-    res.send(apiResponse(HTTP_OK, "Users retrieved.", userDocs));
-  });
-}
-
-// Create a new user
-export function createUser(): RequestHandler {
-  return asyncHandler(async (req, res, next) => {
-    const phone = req.body.phone;
-    // Return error if validation of phone fails
-    let err = validatePhone(phone);
-    if (err) return next(err);
-    const phoneDoc = new Phone(req.body.phone);
-    await phoneDoc.save();
-
-    // Return error if validation of user fails
-    const user = req.body;
-    err = validateUser(user);
-    if (err) {
-      // Delete phone created earlier
-      await Phone.deleteOne({ _id: phoneDoc._id });
-      return next(err);
+    const filter = {};
+    const sort = {};
+    if (req.query.location) {
+      filter["location"] = req.query.location;
+    } else if (req.query.sort) {
+      // If sort by query given as 1, sort by ascending.
+      // Else, sort by descending (even when no query is given).
+      sort["createdAt"] = req.query.sort == 1 ? 1 : -1;
     }
-
-    // Reference phone created earlier
-    user.phone = phoneDoc._id;
-    const userDoc = new User(user);
-
-    // Save User with newly added Phone's id
-    await userDoc.save();
-    res.send(apiResponse(HTTP_OK, "User created.", userDoc));
+    const caseDocs = await Case.find(filter, { _id: 0, __v: 0 })
+      .limit(GET_LIST_LIMIT)
+      .sort(sort)
+      .exec();
+    res.send(apiResponse(HTTP_OK, "Cases retrieved.", caseDocs));
   });
 }
 
 // This function error handler is handled by asyncHandler that calls it
-export function deleteUser(): RequestHandler {
+export function deleteCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     let result, msg, status, data;
 
     if (req.params?.uid) {
-      result = await User.findOneAndDelete({ uid: req.params.uid }).exec();
+      result = await Case.findOneAndDelete({ uid: req.params.uid }).exec();
 
       if (result) {
         status = HTTP_OK;
-        msg = `User '${result.nric}' delete successfully`;
+        msg = `Case '${result.uid}' delete successfully`;
         data = result;
       } else {
         status = HTTP_BAD_REQUEST;
-        msg = `Something went wrong, user not deleted.`;
+        msg = `Something went wrong, case not deleted.`;
         data = { uid: req.params.uid };
       }
 
@@ -166,7 +140,7 @@ export function deleteUser(): RequestHandler {
       // status needs to be explicitly stated for the case of failure.
       res.status(status).send(apiResponse(status, msg, data));
     } else {
-      return next(new Error("DELETE /user/:uid/ is required"));
+      return next(new Error("DELETE /case/:uid/ is required"));
     }
   });
 }
@@ -233,16 +207,11 @@ export function createCase(): RequestHandler {
 
       // Pprepare data
       const { subject, location } = req.body;
-      // Add time portion to date as user is
-      // only required to provide date.
-      const currentTime = new Date().toISOString();
-      const todayDate = Date.parse(
-        req.body.date + "T" + currentTime.split("T")[1]
-      );
+      const date = Date.parse(req.body.date);
 
       // Datetime range for today
-      const start = new Date(todayDate);
-      const end = new Date(todayDate);
+      const start = new Date(date);
+      const end = new Date(date);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
 
@@ -283,18 +252,14 @@ export function createCase(): RequestHandler {
         newQueueNo = 1;
       }
 
-      // Doesn't use default Date.now to insert createdAt to prevent
-      // database timezone differing with client timezone.
-      // TODO: Configure system to timezone.
       const newCase = new Case({
-        userId: userDoc.uid,
+        uid: userDoc.uid,
         nric: userDoc.nric,
         subject: subject,
         status: CASE_STATUS_OPEN,
         refId: `${userDoc.postalCode}_${userDoc.blockHseNo}_${userDoc.floorNo}_${userDoc.unitNo}`,
         location: location,
         queueNo: newQueueNo,
-        createdAt: todayDate,
       });
 
       const savedCase = await newCase.save();

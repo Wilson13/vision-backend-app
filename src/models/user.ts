@@ -53,7 +53,7 @@ const UserSchema: Schema = new Schema({
       "The e-mail format is wrong.",
     ],
   },
-  postalCode: Number,
+  postalCode: { type: Number, required: true },
   blockHseNo: { type: String, required: true },
   floorNo: String,
   unitNo: String,
@@ -65,6 +65,7 @@ const UserSchema: Schema = new Schema({
   authServer: String,
   uid: {
     type: String,
+    required: true,
     unique: true,
     default: uuidv4,
   },
