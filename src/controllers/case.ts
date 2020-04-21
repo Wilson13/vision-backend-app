@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { Error } from "mongoose";
 import validator from "validator";
 import { isNullOrUndefined } from "util";
 
@@ -227,112 +226,6 @@ export function closeCase(): RequestHandler {
           })
         );
       }
-    }
-  });
-}
-
-// Create a new case that reference the user
-export function createCase(): RequestHandler {
-  return asyncHandler(async (req, res, next) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-    if (!req.body.subject || !req.body.location || !req.body.date) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "location, subject, date is required.",
-          req.body
-        )
-      );
-    } else if (req.body.subject.length > 280) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "Maximum characters allowed for subject is 280.",
-          req.body
-        )
-      );
-    } else if (!dateRegex.test(req.body.date)) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "Please send date in ISO 8601 format (yyyy-MM-dd).",
-          req.body
-        )
-      );
-    }
-    if (req.params?.uid) {
-      const userDoc = await User.findOne({ uid: req.params.uid }).exec();
-
-      if (!userDoc) {
-        return next(
-          new CustomError(HTTP_NOT_FOUND, "User not found.", {
-            uid: req.params.uid,
-          })
-        );
-      }
-
-      // Pprepare data
-      const { subject, location } = req.body;
-      const date = Date.parse(req.body.date);
-
-      // Datetime range for today
-      const start = new Date(date);
-      const end = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-
-      // Search for existing open case created today, at this location, by this user.
-      const existingCase = await Case.findOne({
-        location: location,
-        createdAt: { $gte: start, $lt: end },
-        nric: userDoc.nric,
-        status: CASE_STATUS_OPEN,
-      }).sort({
-        createdAt: -1,
-      });
-
-      if (existingCase) {
-        return next(
-          new CustomError(
-            HTTP_NOT_FOUND,
-            "Existing case found for user.",
-            existingCase
-          )
-        );
-      }
-
-      // Search for cases created on today, at this location.
-      const caseDoc = await Case.findOne({
-        location: location,
-        createdAt: { $gte: start, $lt: end },
-      }).sort({
-        createdAt: -1,
-      });
-
-      let newQueueNo = null;
-      if (caseDoc) {
-        // Incrementing queue no
-        newQueueNo = caseDoc.queueNo + 1;
-      } else {
-        // First case of the day at this location
-        newQueueNo = 1;
-      }
-
-      const newCase = new Case({
-        uid: userDoc.uid,
-        nric: userDoc.nric,
-        subject: subject,
-        status: CASE_STATUS_OPEN,
-        refId: `${userDoc.postalCode}_${userDoc.blockHseNo}_${userDoc.floorNo}_${userDoc.unitNo}`,
-        location: location,
-        queueNo: newQueueNo,
-      });
-
-      const savedCase = await newCase.save();
-      return res.send(apiResponse(HTTP_OK, "New case created.", savedCase));
-    } else {
-      return next(new Error("POST /user/:uid/case, 'uid' is required"));
     }
   });
 }

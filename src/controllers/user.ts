@@ -283,6 +283,10 @@ export function createCase(): RequestHandler {
         newQueueNo = 1;
       }
 
+      let caseRefId = `${userDoc.postalCode}_${userDoc.blockHseNo}`;
+      if (userDoc.floorNo) caseRefId += `_${userDoc.floorNo}`;
+      if (userDoc.unitNo) caseRefId += `_${userDoc.unitNo}`;
+
       // Doesn't use default Date.now to insert createdAt to prevent
       // database timezone differing with client timezone.
       // TODO: Configure system to timezone.
@@ -291,7 +295,7 @@ export function createCase(): RequestHandler {
         nric: userDoc.nric,
         subject: subject,
         status: CASE_STATUS_OPEN,
-        refId: `${userDoc.postalCode}_${userDoc.blockHseNo}_${userDoc.floorNo}_${userDoc.unitNo}`,
+        refId: caseRefId,
         location: location,
         queueNo: newQueueNo,
         createdAt: todayDate,
