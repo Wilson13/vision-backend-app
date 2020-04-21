@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { handleSaveError } from "../utils/helper";
 import { BaseSchema } from "./base_schema";
-import { CASE_STATUS_OPEN } from "../utils/constants";
+import {
+  CASE_STATUS_OPEN,
+  CASE_STATUS_MINISTER,
+  CASE_STATUS_UNCONTACTABLE,
+} from "../utils/constants";
 import { v4 as uuidv4 } from "uuid";
 
 export interface CaseInterface extends Document {
@@ -30,7 +34,11 @@ export const CaseSchema: Schema = new Schema({
       "Maximum characters allowed is 280.",
     ],
   },
-  status: { type: String, default: CASE_STATUS_OPEN },
+  status: {
+    type: String,
+    default: CASE_STATUS_OPEN,
+    enum: [CASE_STATUS_OPEN, CASE_STATUS_MINISTER, CASE_STATUS_UNCONTACTABLE],
+  },
   refId: { type: String, required: true },
   location: { type: String, required: true },
   queueNo: { type: Number, required: true },

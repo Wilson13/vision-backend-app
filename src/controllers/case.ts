@@ -14,6 +14,8 @@ import {
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
   GET_LIMIT as GET_LIST_LIMIT,
+  CASE_STATUS_MINISTER,
+  CASE_STATUS_UNCONTACTABLE,
 } from "../utils/constants";
 
 export async function findUserByPhone(
@@ -100,11 +102,29 @@ export function validateUser(user: UserInterface): CustomError {
 
 // Display list of Case.
 export function getCases(): RequestHandler {
-  return asyncHandler(async (req, res) => {
-    const filter = {};
+  return asyncHandler(async (req, res, next) => {
+    const filter = { status: CASE_STATUS_OPEN };
     const sort = {};
     if (req.query.location) {
       filter["location"] = req.query.location;
+    } else if (req.query.status) {
+      if (
+        !(
+          req.query.status === CASE_STATUS_OPEN ||
+          req.query.status === CASE_STATUS_MINISTER ||
+          req.query.status === CASE_STATUS_UNCONTACTABLE
+        )
+      ) {
+        return next(
+          new CustomError(
+            HTTP_BAD_REQUEST,
+            "status and can only be [open|minister|uncontactable].",
+            req.body
+          )
+        );
+      } else {
+        filter.status = req.query.status;
+      }
     } else if (req.query.sort) {
       // If sort by query given as 1, sort by ascending.
       // Else, sort by descending (even when no query is given).
@@ -118,12 +138,19 @@ export function getCases(): RequestHandler {
   });
 }
 
-// This function error handler is handled by asyncHandler that calls it
 export function deleteCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     let result, msg, status, data;
 
-    if (req.params?.uid) {
+    if (!req.params.uid) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "DELETE /case/:uid/, uid is required",
+          null
+        )
+      );
+    } else {
       result = await Case.findOneAndDelete({ uid: req.params.uid }).exec();
 
       if (result) {
@@ -139,27 +166,67 @@ export function deleteCase(): RequestHandler {
       // Since this statement is used for both success and failure of deletion,
       // status needs to be explicitly stated for the case of failure.
       res.status(status).send(apiResponse(status, msg, data));
-    } else {
-      return next(new Error("DELETE /case/:uid/ is required"));
     }
   });
 }
 
-// Search for a user, POST method is used for form submit etc.
-export function searchUser(): RequestHandler {
+// Update a case status, if it's not in one of the final states.
+export function closeCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    const nric = req.body.nric;
+    const updateStatus = req.body.status;
 
-    // Return error if validation fails
-    const err = validateNRIC(nric);
-    if (err) return next(err);
+    if (!req.params.uid) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "PATCH /case/:uid/, uid is required",
+          null
+        )
+      );
+    } else {
+      if (
+        !updateStatus ||
+        !(
+          updateStatus === CASE_STATUS_MINISTER ||
+          updateStatus === CASE_STATUS_UNCONTACTABLE
+        )
+      ) {
+        return next(
+          new CustomError(
+            HTTP_BAD_REQUEST,
+            "status is required and can only be [minister|uncontactable].",
+            req.body
+          )
+        );
+      }
 
-    // Search for user with NRIC
-    const userDoc = await User.findOne({ nric: nric }, { _id: 0, __v: 0 });
-    if (!userDoc)
-      return next(new CustomError(HTTP_NOT_FOUND, "User not found.", req.body));
-    else {
-      return res.send(apiResponse(HTTP_OK, "User found.", userDoc));
+      const caseDoc = await Case.findOne({
+        uid: req.params.uid,
+      }).exec();
+
+      if (caseDoc) {
+        // Do not allow changing of status if it's in one of the final state.
+        if (
+          caseDoc.status === CASE_STATUS_MINISTER ||
+          caseDoc.status === CASE_STATUS_UNCONTACTABLE
+        ) {
+          return next(
+            new CustomError(HTTP_BAD_REQUEST, "Case is closed.", caseDoc)
+          );
+        } else {
+          caseDoc.status = updateStatus;
+          const updateRes = await caseDoc.save();
+          return res.send(
+            apiResponse(HTTP_OK, "Case is updated and closed.", updateRes)
+          );
+        }
+      } else {
+        return next(
+          new CustomError(HTTP_NOT_FOUND, "Case not found", {
+            uid: req.params.uid,
+          })
+        );
+      }
     }
   });
 }
