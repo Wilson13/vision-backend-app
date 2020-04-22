@@ -13,6 +13,7 @@ import {
   HTTP_OK,
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
+  HTTP_CONFLICT,
 } from "../utils/constants";
 import { validatePhone } from "./phone";
 
@@ -259,7 +260,7 @@ export function createCase(): RequestHandler {
       if (existingCase) {
         return next(
           new CustomError(
-            HTTP_NOT_FOUND,
+            HTTP_CONFLICT,
             "Existing case found for user.",
             existingCase
           )

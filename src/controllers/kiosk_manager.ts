@@ -268,12 +268,12 @@ export function sendOTP(): RequestHandler {
         return next(
           new CustomError(
             HTTP_INTERNAL_SERVER_ERROR,
-            "Authorization failed.",
+            "Get OTP from auth server failed.",
             response
           )
         );
       // OTP successfully requested
-      return res.send(apiResponse(HTTP_OK, "OTP sent.", null));
+      return res.send(apiResponse(HTTP_OK, "OTP sent.", response));
     } catch (err) {
       const returnData = isNullOrUndefined(err.response?.data)
         ? err.message
@@ -281,7 +281,7 @@ export function sendOTP(): RequestHandler {
       return next(
         new CustomError(
           HTTP_INTERNAL_SERVER_ERROR,
-          "Authorization failed.",
+          "Get OTP failed.",
           returnData
         )
       );
