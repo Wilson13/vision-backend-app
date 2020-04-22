@@ -3,5 +3,5 @@ name: meet-queue-chart
 description: A Helm chart for Kubernetes
 type: application
 version: 0.2.1
-appVersion: 0.1.0-alpha.8
+appVersion: 0.1.0-alpha.9
 labels: auth-server-release
