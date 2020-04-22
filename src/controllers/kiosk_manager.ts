@@ -13,6 +13,7 @@ import {
   HTTP_BAD_REQUEST,
   HTTP_OK,
   HTTP_INTERNAL_SERVER_ERROR,
+  HTTP_CONFLICT,
 } from "../utils/constants";
 import { validateKioskPhone } from "./kiosk_phone";
 
@@ -264,6 +265,7 @@ export function sendOTP(): RequestHandler {
 
       // Get complete response data
       const response = sendOtpResponse?.data;
+
       if (response.status !== HTTP_OK)
         return next(
           new CustomError(
@@ -278,13 +280,20 @@ export function sendOTP(): RequestHandler {
       const returnData = isNullOrUndefined(err.response?.data)
         ? err.message
         : err.response.data;
-      return next(
-        new CustomError(
-          HTTP_INTERNAL_SERVER_ERROR,
-          "Get OTP failed.",
-          returnData
-        )
-      );
+
+      // If OTP exist, ask user to wait for
+      // 2 min before requesting for a new one.
+      const errorCode =
+        err.response?.status === HTTP_CONFLICT
+          ? HTTP_CONFLICT
+          : HTTP_INTERNAL_SERVER_ERROR;
+
+      const errorMsg =
+        err.response?.status === HTTP_CONFLICT
+          ? "Get OTP failed."
+          : err.message;
+
+      return next(new CustomError(errorCode, errorMsg, returnData));
     }
   });
 }
