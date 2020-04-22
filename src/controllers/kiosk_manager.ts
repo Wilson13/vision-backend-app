@@ -275,23 +275,23 @@ export function sendOTP(): RequestHandler {
           )
         );
       // OTP successfully requested
-      return res.send(apiResponse(HTTP_OK, "OTP sent.", response));
+      return res.send(apiResponse(HTTP_OK, "OTP sent.", null));
     } catch (err) {
-      const returnData = isNullOrUndefined(err.response?.data)
+      let returnData = isNullOrUndefined(err.response?.data)
         ? err.message
         : err.response.data;
 
       // If OTP exist, ask user to wait for
       // 2 min before requesting for a new one.
-      const errorCode =
-        err.response?.status === HTTP_CONFLICT
-          ? HTTP_CONFLICT
-          : HTTP_INTERNAL_SERVER_ERROR;
-
-      const errorMsg =
-        err.response?.status === HTTP_CONFLICT
-          ? "Get OTP failed."
-          : err.message;
+      let errorCode, errorMsg;
+      if (err.response?.status === HTTP_CONFLICT) {
+        errorCode = HTTP_CONFLICT;
+        errorMsg = err.message;
+        returnData = null;
+      } else {
+        errorCode = HTTP_INTERNAL_SERVER_ERROR;
+        errorMsg = "Get OTP failed.";
+      }
 
       return next(new CustomError(errorCode, errorMsg, returnData));
     }
