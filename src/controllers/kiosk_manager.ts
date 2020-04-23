@@ -286,7 +286,7 @@ export function sendOTP(): RequestHandler {
       let errorCode, errorMsg;
       if (err.response?.status === HTTP_CONFLICT) {
         errorCode = HTTP_CONFLICT;
-        errorMsg = err.message;
+        errorMsg = returnData?.message;
         returnData = null;
       } else {
         errorCode = HTTP_INTERNAL_SERVER_ERROR;
