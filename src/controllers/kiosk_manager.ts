@@ -138,6 +138,8 @@ export function authorizeKioskManager(): RequestHandler {
       // Get complete response data
       const response = authorizeResponse.data;
 
+      // This is probably always not called since non-HTTP_OK
+      // responsewill be caught by the catch clause below.
       if (response.status !== HTTP_OK)
         return next(
           new CustomError(
@@ -172,12 +174,10 @@ export function authorizeKioskManager(): RequestHandler {
       const returnData = isNullOrUndefined(err.response?.data)
         ? err.message
         : err.response.data;
+
+      const errorStatus = err.response?.status;
       return next(
-        new CustomError(
-          HTTP_INTERNAL_SERVER_ERROR,
-          "Authorization failed.",
-          returnData
-        )
+        new CustomError(errorStatus, "Authorization failed.", returnData)
       );
     }
   });

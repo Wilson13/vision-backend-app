@@ -2,7 +2,7 @@ env: dev
 replicaCount: 1
 image:
   repository: fthadia/meet-queue
-  tag: 0.1.0-alpha.10
+  tag: 0.1.0-alpha.11
   pullPolicy: Always
   configName: meet-queue-config
 imagePullSecrets:
