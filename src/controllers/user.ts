@@ -17,6 +17,8 @@ import {
 } from "../utils/constants";
 import { validatePhone } from "./phone";
 
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 export async function findUserByPhone(
   userPhone: PhoneInterface
 ): Promise<UserInterface> {
@@ -133,6 +135,18 @@ export function createUser(): RequestHandler {
       // Delete phone created earlier
       await Phone.deleteOne({ _id: phoneDoc._id });
       return next(err);
+    } else if (user.dob != null && !dateRegex.test(user.dob)) {
+      await Phone.deleteOne({ _id: phoneDoc._id });
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "Please send dob in ISO 8601 format (yyyy-MM-dd).",
+          req.body
+        )
+      );
+    } else if (user.dob != null) {
+      const dob = new Date(user.dob);
+      user["dob"] = dob;
     }
 
     // Reference phone created earlier
@@ -194,8 +208,6 @@ export function searchUser(): RequestHandler {
 // Create a new case that reference the user
 export function createCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
     if (!req.body.subject || !req.body.location || !req.body.date) {
       return next(
         new CustomError(
