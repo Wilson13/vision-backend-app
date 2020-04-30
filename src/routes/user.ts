@@ -14,6 +14,8 @@ router.post("/search", verifyJwt(), userController.searchUser());
 
 router.post("/:uid/case", verifyJwt(), userController.createCase());
 
+router.patch("/:uid", verifyJwt(), userController.updateUser());
+
 router.delete("/:uid", verifyJwt(), userController.deleteUser());
 
 //module.exports = router;

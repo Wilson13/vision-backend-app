@@ -2,7 +2,24 @@ import Phone, { PhoneInterface } from "../models/phone";
 import asyncHandler from "../utils/async_handler";
 import { RequestHandler } from "express";
 import { apiResponse, CustomError } from "../utils/helper";
-import { HTTP_BAD_REQUEST, HTTP_OK } from "../utils/constants";
+import {
+  HTTP_BAD_REQUEST,
+  HTTP_OK,
+  ERROR_MSG_PHONE_COUNTRY,
+  ERROR_MSG_PHONE_NUMBER,
+} from "../utils/constants";
+import { isNullOrUndefined } from "util";
+
+const countryCodeRegex = /^\d{2}$/;
+const phoneNumberRegex = /^\d{8}$/;
+export function validatePhoneFormat(phone): string {
+  if (!isNullOrUndefined(phone)) {
+    if (!countryCodeRegex.test(phone.countryCode))
+      return ERROR_MSG_PHONE_COUNTRY;
+    else if (!phoneNumberRegex.test(phone.number))
+      return ERROR_MSG_PHONE_NUMBER;
+  }
+}
 
 /**
  * This function was created to keep input validation outside of models,
@@ -18,14 +35,10 @@ import { HTTP_BAD_REQUEST, HTTP_OK } from "../utils/constants";
 export function validatePhone(phone: PhoneInterface): CustomError {
   if (!phone)
     return new CustomError(HTTP_BAD_REQUEST, "Phone is required", null);
-  else if (!phone.countryCode)
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "Phone.countryCode is required",
-      null
-    );
-  else if (!phone.number)
-    return new CustomError(HTTP_BAD_REQUEST, "Phone.number is required", null);
+
+  const phoneValStr = validatePhoneFormat(phone);
+  if (!isNullOrUndefined(phoneValStr))
+    return new CustomError(HTTP_BAD_REQUEST, phoneValStr, null);
   else return null;
 }
 

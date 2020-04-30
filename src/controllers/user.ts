@@ -14,10 +14,28 @@ import {
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
   HTTP_CONFLICT,
+  ERROR_MSG_RACE,
+  ERROR_MSG_GENDER,
+  ERROR_MSG_MARITAL_STATUS,
+  ERROR_MSG_POSTAL,
+  ERROR_MSG_BLOCK_HOUSE_NO,
+  ERROR_MSG_ADDRESS,
+  ERROR_MSG_FLAT_TYPE,
+  ERROR_MSG_OCCUPATION,
+  HTTP_INTERNAL_SERVER_ERROR,
+  ERROR_MSG_NAME,
+  ERROR_MSG_EMAIL,
+  ERROR_MSG_LANGUAGE,
+  ERROR_MSG_NO_OF_CHILDREN,
+  ERROR_MSG_PHONE_UPDATE,
+  ERROR_MSG_FLOOR_NO,
+  ERROR_MSG_UNIT_NO,
+  ERROR_UPDATE_FIELD,
 } from "../utils/constants";
 import { validatePhone } from "./phone";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const postalRegex = /^\d{6}$/;
 
 export async function findUserByPhone(
   userPhone: PhoneInterface
@@ -47,6 +65,163 @@ export function validateNRIC(nric: string): CustomError {
   else return null;
 }
 
+function validateRace(race): boolean {
+  // If race field does not equal to any of the following value, return false.
+  if (
+    !(
+      race == "chinese" ||
+      race == "malay" ||
+      race == "indian" ||
+      race == "other"
+    )
+  ) {
+    return false;
+    // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
+  } else return true;
+}
+
+function validateGender(gender): boolean {
+  // If race field does not equal to any of the following value, return false.
+  if (!(gender == "male" || gender == "female")) {
+    return false;
+    // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
+  } else return true;
+}
+
+function validateMaritalStatus(maritalStatus): boolean {
+  // If race field does not equal to any of the following value, return false.
+  if (
+    !(
+      maritalStatus == "single" ||
+      maritalStatus == "married" ||
+      maritalStatus == "divorced"
+    )
+  ) {
+    return false;
+    // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
+  } else return true;
+}
+
+// function validateNonMandatoryUserData(patchUser): string {
+//   return null;
+// }
+
+// Validate input format for user, format will
+// only be checked if that field is provided.
+// No mandatory check is included.
+function validateUserDataFormat(userData): string {
+  const noOfChildrenRegex = /^\d+$/;
+
+  // Check name
+  if (
+    !isNullOrUndefined(userData.name) &&
+    !validator.isLength(userData.name, { max: 40 })
+  )
+    return ERROR_MSG_NAME;
+  // Check email
+  if (!isNullOrUndefined(userData.email) && !validator.isEmail(userData.email))
+    return ERROR_MSG_EMAIL;
+  // FIXME: CHECK DOB
+  // Check race
+  else if (!isNullOrUndefined(userData.race) && !validateRace(userData.race))
+    return ERROR_MSG_RACE;
+  // Check gender
+  else if (!isNullOrUndefined(userData.gender) && validateGender(userData.race))
+    return ERROR_MSG_GENDER;
+  // Check language
+  else if (
+    !isNullOrUndefined(userData.language) &&
+    validator.isLength(userData.language, { max: 20 })
+  )
+    return ERROR_MSG_LANGUAGE;
+  // Check noOfChildren
+  else if (
+    !isNullOrUndefined(userData.noOfChildren) &&
+    (!noOfChildrenRegex.test(userData.noOfChildren) ||
+      userData.noOfChildren > 20)
+  ) {
+    // Needed second clause to prevent throwing
+    // "Cast to number failed for value 'value' at path 'noOfChildren'"
+    // if userData.noOfChildren is alphebetical because
+    // checking > 20 with alphebet will always return false.
+    return ERROR_MSG_NO_OF_CHILDREN;
+  }
+  // Check maritalStatus
+  else if (
+    !isNullOrUndefined(userData.maritalStatus) &&
+    validateMaritalStatus(userData.maritalStatus)
+  )
+    return ERROR_MSG_MARITAL_STATUS;
+  // Check occupation
+  else if (
+    !isNullOrUndefined(userData.occupation) &&
+    validator.isLength(userData.occupation.length, { min: 0, max: 20 })
+  )
+    return ERROR_MSG_OCCUPATION;
+  // Check phone
+  // TODO: Don't allow phone update for now, also, each case is attached with it's own contact no.
+  else if (
+    !isNullOrUndefined(userData.phone)
+    // &&
+    // !isNullOrUndefined(validatePhoneFormat(userData.phone))
+  ) {
+    return ERROR_MSG_PHONE_UPDATE;
+  }
+  // return validatePhoneFormat(userData.phone);
+  // Check postalCode
+  else if (
+    !isNullOrUndefined(userData.postalCode) &&
+    !postalRegex.test(userData.postalCode)
+  )
+    return ERROR_MSG_POSTAL;
+  // Check blockHseNo
+  else if (
+    !isNullOrUndefined(userData.blockHseNo) &&
+    validator.isLength(userData.blockHseNo.length, { max: 20 })
+  )
+    return ERROR_MSG_BLOCK_HOUSE_NO;
+  // Check floorNo
+  else if (
+    !isNullOrUndefined(userData.floorNo) &&
+    validator.isLength(userData.blockHseNo.length, { max: 20 })
+  )
+    return ERROR_MSG_FLOOR_NO;
+  // Check unitNo
+  else if (
+    !isNullOrUndefined(userData.unitNo) &&
+    validator.isLength(userData.unitNo.length, { max: 10 })
+  )
+    return ERROR_MSG_UNIT_NO;
+  // Check address
+  else if (
+    !isNullOrUndefined(userData.address) &&
+    validator.isLength(userData.address.length, { max: 40 })
+  )
+    return ERROR_MSG_ADDRESS;
+  else if (
+    !isNullOrUndefined(userData.flatType) &&
+    validator.isLength(userData.flatType.length, { max: 20 })
+  )
+    return ERROR_MSG_FLAT_TYPE;
+  else return null;
+}
+
+// Only one extra check is required when updating user, NRIC cannnot be changed.
+function validatePatchUser(patchUser): string {
+  // Check NRIC
+  if (!isNullOrUndefined(patchUser.nric))
+    return "nric is not allowed to change";
+  else if (
+    !isNullOrUndefined(patchUser.otp) ||
+    !isNullOrUndefined(patchUser.accessToken) ||
+    !isNullOrUndefined(patchUser.verificationCode) ||
+    !isNullOrUndefined(patchUser.authServer) ||
+    !isNullOrUndefined(patchUser.uid)
+  )
+    return ERROR_UPDATE_FIELD;
+  else return validateUserDataFormat(patchUser);
+}
+
 /**
  * This function was created to keep input validation outside of models,
  * which resulted in it being required in multiple places. Reason for not
@@ -58,7 +233,7 @@ export function validateNRIC(nric: string): CustomError {
  * @param user UserInterface
  * @returns CustomError
  */
-export function validateUser(user: UserInterface): CustomError {
+export function validateCreateUser(user: UserInterface): CustomError {
   if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
   else if (
     !user.nric ||
@@ -79,6 +254,12 @@ export function validateUser(user: UserInterface): CustomError {
       "nric, email, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
       user
     );
+  } else if (validateNRIC(user.nric)) {
+    return validateNRIC(user.nric);
+  } else if (!validator.isEmail(user.email))
+    return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
+  else if (validateRace(user.race)) {
+    return new CustomError(HTTP_BAD_REQUEST, ERROR_MSG_RACE, user);
   } else if (!validator.isNumeric(user.postalCode.toString())) {
     return new CustomError(
       HTTP_BAD_REQUEST,
@@ -94,11 +275,7 @@ export function validateUser(user: UserInterface): CustomError {
       "noOfChildren needs to be a number",
       user
     );
-  } else if (validateNRIC(user.nric)) {
-    return validateNRIC(user.nric);
-  } else if (!validator.isEmail(user.email))
-    return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
-  else return null;
+  } else return null;
 }
 
 // Display list of all Users.
@@ -130,7 +307,7 @@ export function createUser(): RequestHandler {
 
     // Return error if validation of user fails
     const user = req.body;
-    err = validateUser(user);
+    err = validateCreateUser(user);
     if (err) {
       // Delete phone created earlier
       await Phone.deleteOne({ _id: phoneDoc._id });
@@ -159,6 +336,73 @@ export function createUser(): RequestHandler {
   });
 }
 
+// Create a new user
+export function updateUser(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    if (req.params?.uid) {
+      const userId = req.params?.uid;
+      const data = req.body;
+
+      // Check if user exists
+      const result = await User.findOne({
+        uid: userId,
+      }).exec();
+
+      if (!result) {
+        // If user not found
+        data["uid"] = req.params.uid;
+
+        return next(
+          new CustomError(HTTP_BAD_REQUEST, "User not found", req.body)
+        );
+      } else {
+        // User found
+        const patchUserValStr = validatePatchUser(req.body);
+
+        // If there's problem with patch user data provided
+        if (!isNullOrUndefined(patchUserValStr))
+          return next(
+            new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body)
+          );
+        else {
+          // If there's no problem with patch user data provided, update user data.
+          const patchedUser = await User.findOneAndUpdate(
+            { uid: userId },
+            req.body,
+            { new: true }
+          );
+
+          if (patchedUser) {
+            res
+              .status(HTTP_OK)
+              .send(apiResponse(HTTP_OK, "User updated successfully", data));
+          } else {
+            return next(
+              new CustomError(
+                HTTP_INTERNAL_SERVER_ERROR,
+                "User update failed.",
+                req.body
+              )
+            );
+          }
+        }
+      }
+    }
+    // If no uid was provided, return error.
+    else {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "PATCH /user/:uid/, 'uid' is required",
+          req.body
+        )
+      );
+    }
+
+    console.log("updateuser");
+  });
+}
+
 // This function error handler is handled by asyncHandler that calls it
 export function deleteUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
@@ -181,7 +425,7 @@ export function deleteUser(): RequestHandler {
       // status needs to be explicitly stated for the case of failure.
       res.status(status).send(apiResponse(status, msg, data));
     } else {
-      return next(new Error("DELETE /user/:uid/ is required"));
+      return next(new Error("DELETE /user/:uid/, 'uid' is required"));
     }
   });
 }

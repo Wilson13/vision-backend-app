@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import { TEST_ENV, PRODUCTION_ENV } from "./constants";
 
 mongoose.set("useCreateIndex", true);
+mongoose.set("useFindAndModify", false);
 
 // Will not set up DB connection if it's just running tests.
 if (process.env.NODE_ENV != TEST_ENV) {
