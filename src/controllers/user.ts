@@ -155,7 +155,7 @@ function validateUserDataFormat(userData): string {
   // Check occupation
   else if (
     !isNullOrUndefined(userData.occupation) &&
-    validator.isLength(userData.occupation.length, { min: 0, max: 20 })
+    !validator.isLength(userData.occupation, { max: 20 })
   )
     return ERROR_MSG_OCCUPATION;
   // Check phone
@@ -177,30 +177,30 @@ function validateUserDataFormat(userData): string {
   // Check blockHseNo
   else if (
     !isNullOrUndefined(userData.blockHseNo) &&
-    validator.isLength(userData.blockHseNo.length, { max: 20 })
+    !validator.isLength(userData.blockHseNo, { max: 20 })
   )
     return ERROR_MSG_BLOCK_HOUSE_NO;
   // Check floorNo
   else if (
     !isNullOrUndefined(userData.floorNo) &&
-    validator.isLength(userData.blockHseNo.length, { max: 20 })
+    !validator.isLength(userData.blockHseNo, { max: 20 })
   )
     return ERROR_MSG_FLOOR_NO;
   // Check unitNo
   else if (
     !isNullOrUndefined(userData.unitNo) &&
-    validator.isLength(userData.unitNo.length, { max: 10 })
+    !validator.isLength(userData.unitNo, { max: 10 })
   )
     return ERROR_MSG_UNIT_NO;
   // Check address
   else if (
     !isNullOrUndefined(userData.address) &&
-    validator.isLength(userData.address.length, { max: 40 })
+    !validator.isLength(userData.address, { max: 40 })
   )
     return ERROR_MSG_ADDRESS;
   else if (
     !isNullOrUndefined(userData.flatType) &&
-    validator.isLength(userData.flatType.length, { max: 20 })
+    !validator.isLength(userData.flatType, { max: 20 })
   )
     return ERROR_MSG_FLAT_TYPE;
   else return null;
