@@ -149,7 +149,7 @@ function validateUserDataFormat(userData): string {
   // Check maritalStatus
   else if (
     !isNullOrUndefined(userData.maritalStatus) &&
-    validateMaritalStatus(userData.maritalStatus)
+    !validateMaritalStatus(userData.maritalStatus)
   )
     return ERROR_MSG_MARITAL_STATUS;
   // Check occupation
