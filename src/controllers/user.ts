@@ -32,7 +32,6 @@ import {
   ERROR_MSG_UNIT_NO,
   ERROR_UPDATE_FIELD,
 } from "../utils/constants";
-import { validatePhone } from "./phone";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const postalRegex = /^\d{6}$/;
@@ -62,6 +61,13 @@ export function validateNRIC(nric: string): CustomError {
     return new CustomError(HTTP_BAD_REQUEST, "nric format is wrong", {
       nric: nric,
     });
+  else return null;
+}
+
+export function validatePhone(phone: string): string {
+  const phoneRegex = /^\d{8}$/;
+
+  if (!phoneRegex.test(phone)) return "phone has to be 8-digit long";
   else return null;
 }
 
@@ -160,13 +166,17 @@ function validateUserDataFormat(userData): string {
     return ERROR_MSG_OCCUPATION;
   // Check phone
   // TODO: Don't allow phone update for now, also, each case is attached with it's own contact no.
-  else if (
-    !isNullOrUndefined(userData.phone)
-    // &&
-    // !isNullOrUndefined(validatePhoneFormat(userData.phone))
-  ) {
-    return ERROR_MSG_PHONE_UPDATE;
+  // else if (
+  //   !isNullOrUndefined(userData.phone)
+  //   // &&
+  //   // !isNullOrUndefined(validatePhoneFormat(userData.phone))
+  // ) {
+  //   return ERROR_MSG_PHONE_UPDATE;
+  // }
+  if (!validatePhone(userData.phone)) {
+    return validatePhone(userData.phone);
   }
+
   // return validatePhoneFormat(userData.phone);
   // Check postalCode
   else if (
@@ -288,9 +298,7 @@ export function getUsers(): RequestHandler {
   // instead of
   // router.get('/',  asyncHandler(getUsers));
   return asyncHandler(async (req, res) => {
-    const userDocs = await User.find({}, { _id: 0, __v: 0 })
-      .populate("phone")
-      .exec();
+    const userDocs = await User.find({}, { _id: 0, __v: 0 }).exec();
     res.send(apiResponse(HTTP_OK, "Users retrieved.", userDocs));
   });
 }
@@ -298,22 +306,14 @@ export function getUsers(): RequestHandler {
 // Create a new user
 export function createUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    const phone = req.body.phone;
-    // Return error if validation of phone fails
-    let err = validatePhone(phone);
-    if (err) return next(err);
-    const phoneDoc = new Phone(req.body.phone);
-    await phoneDoc.save();
-
     // Return error if validation of user fails
     const user = req.body;
-    err = validateCreateUser(user);
+    const err = validateCreateUser(user);
+
     if (err) {
       // Delete phone created earlier
-      await Phone.deleteOne({ _id: phoneDoc._id });
       return next(err);
     } else if (user.dob != null && !dateRegex.test(user.dob)) {
-      await Phone.deleteOne({ _id: phoneDoc._id });
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
@@ -327,7 +327,6 @@ export function createUser(): RequestHandler {
     }
 
     // Reference phone created earlier
-    user.phone = phoneDoc._id;
     const userDoc = new User(user);
 
     // Save User with newly added Phone's id
@@ -440,9 +439,10 @@ export function searchUser(): RequestHandler {
     if (err) return next(err);
 
     // Search for user with NRIC
-    const userDoc = await User.findOne({ nric: nric }, { _id: 0, __v: 0 })
-      .populate("phone", "-_id -__v -createdAt")
-      .exec();
+    const userDoc = await User.findOne(
+      { nric: nric },
+      { _id: 0, __v: 0 }
+    ).exec();
     if (!userDoc)
       return next(new CustomError(HTTP_NOT_FOUND, "User not found.", req.body));
     else {

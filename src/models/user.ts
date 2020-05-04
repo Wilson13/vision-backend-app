@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { HTTP_CONFLICT } from "../utils/constants";
-import Phone from "./phone";
 import { CustomError } from "../utils/helper";
 import { BaseSchema } from "./base_schema";
 import { v4 as uuidv4 } from "uuid";
@@ -15,7 +14,7 @@ export interface UserInterface extends Document {
   noOfChildren: number;
   maritalStatus: string;
   occupation: string;
-  phone: object;
+  phone: string;
   email: string;
   postalCode: number;
   blockHseNo: string;
@@ -41,7 +40,7 @@ const UserSchema: Schema = new Schema({
   noOfChildren: Number,
   maritalStatus: { type: String, required: true },
   occupation: { type: String, required: true },
-  phone: { type: Schema.Types.ObjectId, ref: "Phone", required: true },
+  phone: { type: String, required: true, unique: true },
   email: {
     type: String,
     unique: true,
@@ -74,9 +73,9 @@ const UserSchema: Schema = new Schema({
 UserSchema.post<UserInterface>("save", function (err, doc, next) {
   if (err) {
     // Delete phone if error occured while saving user into DB
-    Phone.deleteOne({ _id: doc.phone._id }, function (err) {
-      if (err) return next(err);
-    });
+    // Phone.deleteOne({ _id: doc.phone._id }, function (err) {
+    //   if (err) return next(err);
+    // });
     if (err.name === "MongoError" && err.code === 11000) {
       // According to RFC 7231, Conflicts are most likely to occur in
       // response to a PUT request but it's used for POST request too.
@@ -94,8 +93,8 @@ UserSchema.post<UserInterface>("save", function (err, doc, next) {
   }
 });
 
-UserSchema.post<UserInterface>("findOneAndDelete", async function (doc) {
-  if (doc && doc.phone) await Phone.deleteOne({ _id: doc.phone });
-});
+// UserSchema.post<UserInterface>("findOneAndDelete", async function (doc) {
+//   if (doc && doc.phone) await Phone.deleteOne({ _id: doc.phone });
+// });
 
 export default mongoose.model<UserInterface>("User", UserSchema);

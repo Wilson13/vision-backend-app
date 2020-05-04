@@ -18,7 +18,7 @@ export function validatePhoneFormat(phone): string {
       return ERROR_MSG_PHONE_COUNTRY;
     else if (!phoneNumberRegex.test(phone.number))
       return ERROR_MSG_PHONE_NUMBER;
-  }
+  } else return null;
 }
 
 /**
