@@ -27,7 +27,6 @@ import {
   ERROR_MSG_EMAIL,
   ERROR_MSG_LANGUAGE,
   ERROR_MSG_NO_OF_CHILDREN,
-  ERROR_MSG_PHONE_UPDATE,
   ERROR_MSG_FLOOR_NO,
   ERROR_MSG_UNIT_NO,
   ERROR_UPDATE_FIELD,
@@ -247,7 +246,6 @@ export function validateCreateUser(user: UserInterface): CustomError {
   if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
   else if (
     !user.nric ||
-    !user.email ||
     !user.name ||
     !user.phone ||
     !user.race ||
@@ -261,12 +259,12 @@ export function validateCreateUser(user: UserInterface): CustomError {
   ) {
     return new CustomError(
       HTTP_BAD_REQUEST,
-      "nric, email, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
+      "nric, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
       user
     );
   } else if (validateNRIC(user.nric)) {
     return validateNRIC(user.nric);
-  } else if (!validator.isEmail(user.email))
+  } else if (!isNullOrUndefined(user.email) && !validator.isEmail(user.email))
     return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
   else if (validateRace(user.race)) {
     return new CustomError(HTTP_BAD_REQUEST, ERROR_MSG_RACE, user);
