@@ -115,7 +115,7 @@ function validateUserDataFormat(userData): string {
   // Check name
   if (
     !isNullOrUndefined(userData.name) &&
-    !validator.isLength(userData.name, { max: 40 })
+    !validator.isLength(userData.name, { max: 50 })
   )
     return ERROR_MSG_NAME;
   // Check email
@@ -131,7 +131,7 @@ function validateUserDataFormat(userData): string {
   // Check language
   else if (
     !isNullOrUndefined(userData.language) &&
-    validator.isLength(userData.language, { max: 20 })
+    validator.isLength(userData.language, { max: 50 })
   )
     return ERROR_MSG_LANGUAGE;
   // Check noOfChildren
@@ -155,7 +155,7 @@ function validateUserDataFormat(userData): string {
   // Check occupation
   else if (
     !isNullOrUndefined(userData.occupation) &&
-    !validator.isLength(userData.occupation, { max: 20 })
+    !validator.isLength(userData.occupation, { max: 50 })
   )
     return ERROR_MSG_OCCUPATION;
   // Check phone
@@ -177,7 +177,7 @@ function validateUserDataFormat(userData): string {
   // Check blockHseNo
   else if (
     !isNullOrUndefined(userData.blockHseNo) &&
-    !validator.isLength(userData.blockHseNo, { max: 20 })
+    !validator.isLength(userData.blockHseNo, { max: 50 })
   )
     return ERROR_MSG_BLOCK_HOUSE_NO;
   // Check floorNo
@@ -195,7 +195,7 @@ function validateUserDataFormat(userData): string {
   // Check address
   else if (
     !isNullOrUndefined(userData.address) &&
-    !validator.isLength(userData.address, { max: 40 })
+    !validator.isLength(userData.address, { max: 50 })
   )
     return ERROR_MSG_ADDRESS;
   else if (

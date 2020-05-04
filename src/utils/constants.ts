@@ -17,7 +17,7 @@ export const CASE_STATUS_UNCONTACTABLE = "uncontactable";
 
 export const ERROR_MSG_EMAIL = "email format is wrong";
 
-export const ERROR_MSG_NAME = "name cannot be longer than 40 characters";
+export const ERROR_MSG_NAME = "name cannot be longer than 50 characters";
 
 export const ERROR_MSG_RACE =
   "race has to be either of ['chinese'|'malay'|'indian'|'other']";
@@ -36,7 +36,7 @@ export const ERROR_MSG_MARITAL_STATUS =
 export const ERROR_MSG_POSTAL = "postal code has to be six-digit format";
 
 export const ERROR_MSG_OCCUPATION =
-  "occupation cannot be longer than 20 characters";
+  "occupation cannot be longer than 50 characters";
 
 export const ERROR_MSG_PHONE_UPDATE = "phone cannot be updated for now";
 
@@ -47,13 +47,13 @@ export const ERROR_MSG_PHONE_NUMBER =
   "phone.number is required and has to be 8-digit long";
 
 export const ERROR_MSG_BLOCK_HOUSE_NO =
-  "blockHseNo cannot be longer than 20 characters";
+  "blockHseNo cannot be longer than 50 characters";
 
 export const ERROR_MSG_FLOOR_NO = "floorNo cannot be longer than 20 characters";
 
 export const ERROR_MSG_UNIT_NO = "unitNo cannot be longer than 10 characters";
 
-export const ERROR_MSG_ADDRESS = "address cannot be longer than 40 characters";
+export const ERROR_MSG_ADDRESS = "address cannot be longer than 50 characters";
 
 export const ERROR_MSG_FLAT_TYPE =
   "flatType cannot be longer than 20 characters";
