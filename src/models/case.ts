@@ -17,6 +17,7 @@ export interface CaseInterface extends Document {
   refId: string;
   location: string;
   queueNo: number;
+  whatsappCall: boolean;
 }
 
 export const CaseSchema: Schema = new Schema({
@@ -42,6 +43,7 @@ export const CaseSchema: Schema = new Schema({
   refId: { type: String, required: true },
   location: { type: String, required: true },
   queueNo: { type: Number, required: true },
+  whatsappCall: { type: Boolean, default: false },
 });
 
 // Compund index

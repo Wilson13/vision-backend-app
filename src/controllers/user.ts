@@ -477,6 +477,20 @@ export function createCase(): RequestHandler {
           req.body
         )
       );
+    } else if (!isNullOrUndefined(req.body.whatsappCall)) {
+      // Validate whatsappCall
+      if (!validator.isBoolean(req.body.whatsappCall)) {
+        return next(
+          new CustomError(
+            HTTP_BAD_REQUEST,
+            "whatsappCAll has to be boolean [true|false]",
+            req.body
+          )
+        );
+      } else {
+        const tempVal = req.body.whatsappCall;
+        req.body.whatsappCall = tempVal == "true" ? true : false;
+      }
     }
     if (req.params?.uid) {
       const userDoc = await User.findOne({ uid: req.params.uid }).exec();
@@ -556,6 +570,7 @@ export function createCase(): RequestHandler {
         refId: caseRefId,
         location: location,
         queueNo: newQueueNo,
+        whatsappCall: req.body.whatsappCall,
         createdAt: todayDate,
       });
 
