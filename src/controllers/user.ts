@@ -73,12 +73,10 @@ export function validatePhone(phone: string): string {
 function validateRace(race): boolean {
   // If race field does not equal to any of the following value, return false.
   if (
-    !(
-      race == "chinese" ||
-      race == "malay" ||
-      race == "indian" ||
-      race == "other"
-    )
+    race != "chinese" ||
+    race != "malay" ||
+    race != "indian" ||
+    race != "other"
   ) {
     return false;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
@@ -87,7 +85,7 @@ function validateRace(race): boolean {
 
 function validateGender(gender): boolean {
   // If race field does not equal to any of the following value, return false.
-  if (!(gender == "male" || gender == "female")) {
+  if (gender != "male" || gender != "female") {
     return false;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
   } else return true;
@@ -96,11 +94,9 @@ function validateGender(gender): boolean {
 function validateMaritalStatus(maritalStatus): boolean {
   // If race field does not equal to any of the following value, return false.
   if (
-    !(
-      maritalStatus == "single" ||
-      maritalStatus == "married" ||
-      maritalStatus == "divorced"
-    )
+    maritalStatus != "single" ||
+    maritalStatus != "married" ||
+    maritalStatus != "divorced"
   ) {
     return false;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
