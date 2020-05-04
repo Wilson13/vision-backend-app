@@ -46,7 +46,7 @@ steps:
       pull: if-not-exists
     commands:
       # Version has to be at first line for ftctl to work
-      - echo -n "0.1.0-alpha.20, ${DRONE_BRANCH}, ${DRONE_BRANCH}-${DRONE_COMMIT}" >> .tags
+      - echo -n "0.1.0-alpha.21, ${DRONE_BRANCH}, ${DRONE_BRANCH}-${DRONE_COMMIT}" >> .tags
 
   - name: build-and-push-docker-image
     image: plugins/docker

@@ -73,34 +73,34 @@ export function validatePhone(phone: string): string {
 function validateRace(race): boolean {
   // If race field does not equal to any of the following value, return false.
   if (
-    race != "chinese" ||
-    race != "malay" ||
-    race != "indian" ||
-    race != "other"
+    race == "chinese" ||
+    race == "malay" ||
+    race == "indian" ||
+    race == "other"
   ) {
-    return false;
+    return true;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
-  } else return true;
+  } else return false;
 }
 
 function validateGender(gender): boolean {
   // If race field does not equal to any of the following value, return false.
-  if (gender != "male" || gender != "female") {
-    return false;
+  if (gender == "male" || gender == "female") {
+    return true;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
-  } else return true;
+  } else return false;
 }
 
 function validateMaritalStatus(maritalStatus): boolean {
   // If race field does not equal to any of the following value, return false.
   if (
-    maritalStatus != "single" ||
-    maritalStatus != "married" ||
-    maritalStatus != "divorced"
+    maritalStatus == "single" ||
+    maritalStatus == "married" ||
+    maritalStatus == "divorced"
   ) {
-    return false;
+    return true;
     // return "race has to be either ['chinese'|'malay'|'indian'|'other']";
-  } else return true;
+  } else return false;
 }
 
 // function validateNonMandatoryUserData(patchUser): string {
@@ -132,7 +132,7 @@ function validateUserDataFormat(userData): string {
   // Check language
   else if (
     !isNullOrUndefined(userData.language) &&
-    validator.isLength(userData.language, { max: 50 })
+    !validator.isLength(userData.language, { max: 50 })
   )
     return ERROR_MSG_LANGUAGE;
   // Check noOfChildren
@@ -260,25 +260,25 @@ export function validateCreateUser(user: UserInterface): CustomError {
     );
   } else if (validateNRIC(user.nric)) {
     return validateNRIC(user.nric);
-  } else if (!isNullOrUndefined(user.email) && !validator.isEmail(user.email))
-    return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
-  else if (validateRace(user.race)) {
-    return new CustomError(HTTP_BAD_REQUEST, ERROR_MSG_RACE, user);
-  } else if (!validator.isNumeric(user.postalCode.toString())) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "postalCode needs to be a number",
-      user
-    );
-  } else if (
-    user.noOfChildren &&
-    !validator.isNumeric(user.noOfChildren.toString())
-  ) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "noOfChildren needs to be a number",
-      user
-    );
+    // } else if (!isNullOrUndefined(user.email) && !validator.isEmail(user.email))
+    //   return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
+    // else if (validateRace(user.race)) {
+    //   return new CustomError(HTTP_BAD_REQUEST, ERROR_MSG_RACE, user);
+    // } else if (!validator.isNumeric(user.postalCode.toString())) {
+    //   return new CustomError(
+    //     HTTP_BAD_REQUEST,
+    //     "postalCode needs to be a number",
+    //     user
+    //   );
+    // } else if (
+    //   user.noOfChildren &&
+    //   !validator.isNumeric(user.noOfChildren.toString())
+    // ) {
+    //   return new CustomError(
+    //     HTTP_BAD_REQUEST,
+    //     "noOfChildren needs to be a number",
+    //     user
+    //   );
   } else return null;
 }
 
@@ -318,6 +318,11 @@ export function createUser(): RequestHandler {
     } else if (user.dob != null) {
       const dob = new Date(user.dob);
       user["dob"] = dob;
+    }
+
+    const patchUserValStr = validateUserDataFormat(req.body);
+    if (!isNullOrUndefined(patchUserValStr)) {
+      return next(new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body));
     }
 
     // Reference phone created earlier
