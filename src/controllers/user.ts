@@ -440,7 +440,9 @@ export function searchUser(): RequestHandler {
     if (err) return next(err);
 
     // Search for user with NRIC
-    const userDoc = await User.findOne({ nric: nric }, { _id: 0, __v: 0 });
+    const userDoc = await User.findOne({ nric: nric }, { _id: 0, __v: 0 })
+      .populate("phone", "-_id -__v -createdAt")
+      .exec();
     if (!userDoc)
       return next(new CustomError(HTTP_NOT_FOUND, "User not found.", req.body));
     else {
