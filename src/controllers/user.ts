@@ -453,19 +453,41 @@ export function searchUser(): RequestHandler {
 // Create a new case that reference the user
 export function createCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    if (!req.body.subject || !req.body.location || !req.body.date) {
+    if (
+      !req.body.subject ||
+      !req.body.description ||
+      !req.body.language ||
+      !req.body.location ||
+      !req.body.date
+    ) {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "location, subject, date is required.",
+          "subject, description, language, location, date is required.",
           req.body
         )
       );
-    } else if (req.body.subject.length > 280) {
+    } else if (req.body.subject.length > 80) {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "Maximum characters allowed for subject is 280.",
+          "Maximum characters allowed for subject is 80.",
+          req.body
+        )
+      );
+    } else if (req.body.description.length > 280) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "Maximum characters allowed for description is 280.",
+          req.body
+        )
+      );
+    } else if (req.body.language.length > 80) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "Maximum characters allowed for language is 80.",
           req.body
         )
       );
@@ -504,7 +526,13 @@ export function createCase(): RequestHandler {
       }
 
       // Pprepare data
-      const { subject, location } = req.body;
+      const {
+        subject,
+        location,
+        description,
+        whatsappCall,
+        language,
+      } = req.body;
       // Add time portion to date as user is
       // only required to provide date.
       const currentTime = new Date().toISOString();
@@ -566,11 +594,13 @@ export function createCase(): RequestHandler {
         userId: userDoc.uid,
         nric: userDoc.nric,
         subject: subject,
+        description: description,
+        language: language,
         status: CASE_STATUS_OPEN,
         refId: caseRefId,
         location: location,
         queueNo: newQueueNo,
-        whatsappCall: req.body.whatsappCall,
+        whatsappCall: whatsappCall,
         createdAt: todayDate,
       });
 

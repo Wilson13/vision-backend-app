@@ -13,6 +13,8 @@ export interface CaseInterface extends Document {
   userId: string;
   nric: string;
   subject: string;
+  description: string;
+  language: string;
   status: string;
   refId: string;
   location: string;
@@ -30,11 +32,22 @@ export const CaseSchema: Schema = new Schema({
     required: true,
     validate: [
       function (content): boolean {
+        return content.length <= 80;
+      },
+      "Maximum characters allowed is 280.",
+    ],
+  },
+  description: {
+    type: String,
+    required: true,
+    validate: [
+      function (content): boolean {
         return content.length <= 280;
       },
       "Maximum characters allowed is 280.",
     ],
   },
+  language: { type: String, required: true },
   status: {
     type: String,
     default: CASE_STATUS_OPEN,
