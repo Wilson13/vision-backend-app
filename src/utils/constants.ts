@@ -46,6 +46,8 @@ export const ERROR_MSG_PHONE_COUNTRY =
 export const ERROR_MSG_PHONE_NUMBER =
   "phone.number is required and has to be 8-digit long";
 
+export const ERROR_MSG_PHONE_NUMBER_FORMAT = "phone has to be 8-digit long";
+
 export const ERROR_MSG_BLOCK_HOUSE_NO =
   "blockHseNo cannot be longer than 50 characters";
 

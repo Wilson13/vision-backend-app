@@ -30,6 +30,7 @@ import {
   ERROR_MSG_FLOOR_NO,
   ERROR_MSG_UNIT_NO,
   ERROR_UPDATE_FIELD,
+  ERROR_MSG_PHONE_NUMBER_FORMAT,
 } from "../utils/constants";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -63,11 +64,11 @@ export function validateNRIC(nric: string): CustomError {
   else return null;
 }
 
-export function validatePhone(phone: string): string {
+export function validatePhone(phone: string): boolean {
   const phoneRegex = /^\d{8}$/;
 
-  if (!phoneRegex.test(phone)) return "phone has to be 8-digit long";
-  else return null;
+  if (!phoneRegex.test(phone)) return false;
+  else return true;
 }
 
 function validateRace(race): boolean {
@@ -168,10 +169,9 @@ function validateUserDataFormat(userData): string {
   // ) {
   //   return ERROR_MSG_PHONE_UPDATE;
   // }
-  if (!validatePhone(userData.phone)) {
-    return validatePhone(userData.phone);
+  else if (!validatePhone(userData.phone)) {
+    return ERROR_MSG_PHONE_NUMBER_FORMAT;
   }
-
   // return validatePhoneFormat(userData.phone);
   // Check postalCode
   else if (
