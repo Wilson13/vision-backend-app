@@ -505,7 +505,7 @@ export function createCase(): RequestHandler {
         return next(
           new CustomError(
             HTTP_BAD_REQUEST,
-            "whatsappCAll has to be boolean [true|false]",
+            "whatsappCall has to be string [true|false]",
             req.body
           )
         );
