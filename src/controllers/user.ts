@@ -546,12 +546,14 @@ export function getUserPhoto(): RequestHandler {
           );
         } catch (err) {
           let errMsg;
+          let statusCode = HTTP_BAD_REQUEST;
           if (!(isNullOrUndefined(err?.code) && err.code == "NotFound")) {
             errMsg = "No image found for user";
+            statusCode = HTTP_NOT_FOUND;
           } else {
             errMsg = "There was an error uploading the photo.";
           }
-          return next(new CustomError(HTTP_BAD_REQUEST, errMsg, null));
+          return next(new CustomError(statusCode, errMsg, null));
         }
       }
     }
