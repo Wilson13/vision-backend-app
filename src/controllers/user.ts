@@ -400,7 +400,7 @@ export function updateUser(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "PATCH /user/:uid/, 'uid' is required",
+          "PATCH /user/:uid/, 'uid' is required.",
           req.body
         )
       );
@@ -419,7 +419,7 @@ export function uploadUserPhoto(): RequestHandler {
       // If file is not found
       if (req.file == undefined)
         return next(
-          new CustomError(HTTP_BAD_REQUEST, "Image file is required", null)
+          new CustomError(HTTP_BAD_REQUEST, "Image file is required.", null)
         );
 
       // Obtain file extension
@@ -428,7 +428,7 @@ export function uploadUserPhoto(): RequestHandler {
       if (fileExt != ".jpg") {
         // Accept only one type of extension to facilitate download
         return next(
-          new CustomError(HTTP_BAD_REQUEST, "Only .jpg file is accepted", null)
+          new CustomError(HTTP_BAD_REQUEST, "Only .jpg file is accepted.", null)
         );
       }
 
@@ -440,7 +440,7 @@ export function uploadUserPhoto(): RequestHandler {
 
       if (!result) {
         // If user not found
-        return next(new CustomError(HTTP_BAD_REQUEST, "User not found", null));
+        return next(new CustomError(HTTP_BAD_REQUEST, "User not found.", null));
       } else {
         // User found, upload photo to AMAZON S3 bucket
         // Set the region
@@ -478,8 +478,9 @@ export function uploadUserPhoto(): RequestHandler {
           return next(
             new CustomError(
               HTTP_BAD_REQUEST,
-              "There was an error uploading the photo: ",
-              { err: err }
+              "There was an error uploading the photo.",
+              // { err: err }
+              null
             )
           );
         }
@@ -490,7 +491,7 @@ export function uploadUserPhoto(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "PATCH /user/:uid/, 'uid' is required",
+          "PATCH /user/:uid/, 'uid' is required.",
           req.body
         )
       );
@@ -512,7 +513,7 @@ export function getUserPhoto(): RequestHandler {
 
       if (!result) {
         // If user not found
-        return next(new CustomError(HTTP_BAD_REQUEST, "User not found", null));
+        return next(new CustomError(HTTP_BAD_REQUEST, "User not found.", null));
       } else {
         try {
           // User found, retrieve photo from AMAZON S3 bucket
@@ -530,25 +531,27 @@ export function getUserPhoto(): RequestHandler {
           const params = {
             Bucket: bucketName,
             Key: photoKey,
-            Expires: signedUrlExpireSeconds,
           };
 
+          // Check if object exists
+          await s3.headObject(params).promise();
+          params["Expires"] = signedUrlExpireSeconds;
           const url = s3.getSignedUrl("getObject", params);
 
           return res.status(HTTP_OK).send(
-            apiResponse(HTTP_OK, "Retrieved photo successfully", {
+            apiResponse(HTTP_OK, "Retrieved photo successfully.", {
               url: url,
               validity: "3 min",
             })
           );
         } catch (err) {
-          return next(
-            new CustomError(
-              HTTP_BAD_REQUEST,
-              "There was an error uploading the photo: ",
-              { err: err }
-            )
-          );
+          let errMsg;
+          if (!(isNullOrUndefined(err?.code) && err.code == "NotFound")) {
+            errMsg = "No image found for user";
+          } else {
+            errMsg = "There was an error uploading the photo.";
+          }
+          return next(new CustomError(HTTP_BAD_REQUEST, errMsg, null));
         }
       }
     }
@@ -557,7 +560,7 @@ export function getUserPhoto(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "PATCH /user/:uid/, 'uid' is required",
+          "PATCH /user/:uid/, 'uid' is required.",
           req.body
         )
       );
