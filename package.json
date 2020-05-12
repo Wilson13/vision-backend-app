@@ -35,7 +35,7 @@
     "@types/supertest": "^2.0.9",
     "@types/uuid": "^7.0.3",
     "@types/validator": "^13.0.0",
-    "aws-sdk": "^2.668.0",
+    "aws-sdk": "^2.673.0",
     "axios": "^0.19.2",
     "bcrypt": "^4.0.1",
     "cookie-parser": "~1.4.5",

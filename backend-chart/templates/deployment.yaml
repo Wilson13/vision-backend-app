@@ -48,6 +48,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-secret
                   key: mongodb-password
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: aws-secret-access-key
+            - name: AWS_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AWS_BUCKET_NAME
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AWS_REGION
             - name: AUTH_AUTHORIZE_URI
               valueFrom:
                 configMapKeyRef:

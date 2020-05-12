@@ -2,6 +2,9 @@ import { RequestHandler } from "express";
 import { Error } from "mongoose";
 import validator from "validator";
 import { isNullOrUndefined } from "util";
+import AWS from "aws-sdk";
+import path from "path";
+import fs from "fs";
 
 import Case from "../models/case";
 import User, { UserInterface } from "../models/user";
@@ -282,7 +285,9 @@ export function validateCreateUser(user: UserInterface): CustomError {
   } else return null;
 }
 
-// Display list of all Users.
+/**
+ * Display list of all Users.
+ */
 export function getUsers(): RequestHandler {
   // Requires the export function remain as function not a middleware
   // so we can wrap asyncHandler here instead of at /routes level.
@@ -297,7 +302,9 @@ export function getUsers(): RequestHandler {
   });
 }
 
-// Create a new user
+/**
+ * Create a new user
+ */
 export function createUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     // Return error if validation of user fails
@@ -334,7 +341,9 @@ export function createUser(): RequestHandler {
   });
 }
 
-// Create a new user
+/**
+ * Update an existing user
+ */
 export function updateUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     if (req.params?.uid) {
@@ -398,6 +407,161 @@ export function updateUser(): RequestHandler {
     }
 
     console.log("updateuser");
+  });
+}
+
+/**
+ * Upload a photo of one user
+ * */
+export function uploadUserPhoto(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    if (req.params?.uid) {
+      // If file is not found
+      if (req.file == undefined)
+        return next(
+          new CustomError(HTTP_BAD_REQUEST, "Image file is required", null)
+        );
+
+      // Obtain file extension
+      const fileExt = path.extname(req.file.originalname);
+
+      if (fileExt != ".jpg") {
+        // Accept only one type of extension to facilitate download
+        return next(
+          new CustomError(HTTP_BAD_REQUEST, "Only .jpg file is accepted", null)
+        );
+      }
+
+      // Check if user exists
+      const userId = req.params?.uid;
+      const result = await User.findOne({
+        uid: userId,
+      }).exec();
+
+      if (!result) {
+        // If user not found
+        return next(new CustomError(HTTP_BAD_REQUEST, "User not found", null));
+      } else {
+        // User found, upload photo to AMAZON S3 bucket
+        // Set the region
+        try {
+          AWS.config.update({
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            region: process.env.AWS_REGION,
+          });
+          // Create S3 service object
+          const s3 = new AWS.S3({
+            apiVersion: "2006-03-01",
+            httpOptions: { timeout: 3000 },
+          });
+
+          // Bucket name
+          const bucketName = process.env.AWS_BUCKET_NAME;
+          // Use user's uid as the key plus the extension type of the original file
+          const photoKey = userId + fileExt;
+
+          const params = {
+            Bucket: bucketName,
+            Key: photoKey,
+            Body: req.file.buffer,
+            // ACL: "public-read",
+          };
+
+          const uploadRes = await s3.upload(params).promise();
+          return res.status(HTTP_OK).send(
+            apiResponse(HTTP_OK, "Successfully uploaded photo.", {
+              data: uploadRes,
+            })
+          );
+        } catch (err) {
+          return next(
+            new CustomError(
+              HTTP_BAD_REQUEST,
+              "There was an error uploading the photo: ",
+              { err: err }
+            )
+          );
+        }
+      }
+    }
+    // If no uid was provided, return error.
+    else {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "PATCH /user/:uid/, 'uid' is required",
+          req.body
+        )
+      );
+    }
+  });
+}
+
+/**
+ * Retrieve the photo of one user
+ * */
+export function getUserPhoto(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    if (req.params?.uid) {
+      // Check if user exists
+      const userId = req.params?.uid;
+      const result = await User.findOne({
+        uid: userId,
+      }).exec();
+
+      if (!result) {
+        // If user not found
+        return next(new CustomError(HTTP_BAD_REQUEST, "User not found", null));
+      } else {
+        try {
+          // User found, retrieve photo from AMAZON S3 bucket
+          // Set the region
+          AWS.config.update({ region: process.env.AWS_REGION });
+          // Create S3 service object
+          const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
+
+          // Bucket name
+          const bucketName = process.env.AWS_BUCKET_NAME;
+          // Use user's uid as the key plus the extension type of the original file
+          const photoKey = userId + ".jpg";
+          // URL expires in 3 minutes
+          const signedUrlExpireSeconds = 60 * 5;
+          const params = {
+            Bucket: bucketName,
+            Key: photoKey,
+            Expires: signedUrlExpireSeconds,
+          };
+
+          const url = s3.getSignedUrl("getObject", params);
+
+          return res.status(HTTP_OK).send(
+            apiResponse(HTTP_OK, "Retrieved photo successfully", {
+              url: url,
+              validity: "3 min",
+            })
+          );
+        } catch (err) {
+          return next(
+            new CustomError(
+              HTTP_BAD_REQUEST,
+              "There was an error uploading the photo: ",
+              { err: err }
+            )
+          );
+        }
+      }
+    }
+    // If no uid was provided, return error.
+    else {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "PATCH /user/:uid/, 'uid' is required",
+          req.body
+        )
+      );
+    }
   });
 }
 
