@@ -526,8 +526,8 @@ export function getUserPhoto(): RequestHandler {
           const bucketName = process.env.AWS_BUCKET_NAME;
           // Use user's uid as the key plus the extension type of the original file
           const photoKey = userId + ".jpg";
-          // URL expires in 3 minutes
-          const signedUrlExpireSeconds = 60 * 5;
+          // URL expires in 15 minutes
+          const signedUrlExpireSeconds = process.env.AWS_SIGNED_URL_EXPIRES;
           const params = {
             Bucket: bucketName,
             Key: photoKey,

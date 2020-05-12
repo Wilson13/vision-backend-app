@@ -68,6 +68,11 @@ spec:
                 configMapKeyRef:
                   name: {{.Release.Name}}-config
                   key: AWS_REGION
+            - name: AWS_SIGNED_URL_EXPIRES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-config
+                  key: AWS_SIGNED_URL_EXPIRES
             - name: AUTH_AUTHORIZE_URI
               valueFrom:
                 configMapKeyRef:

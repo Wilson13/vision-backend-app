@@ -11,5 +11,6 @@ data:
     AUTH_DEVELOPER_ID: wilson
     AWS_BUCKET_NAME: meet-queue-user
     AWS_REGION: ap-southeast-1
+    AWS_SIGNED_URL_EXPIRES: 900
 metadata:
     name: {{ .Release.Name }}-config
