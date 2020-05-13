@@ -468,12 +468,10 @@ export function uploadUserPhoto(): RequestHandler {
             // ACL: "public-read",
           };
 
-          const uploadRes = await s3.upload(params).promise();
-          return res.status(HTTP_OK).send(
-            apiResponse(HTTP_OK, "Successfully uploaded photo.", {
-              data: uploadRes,
-            })
-          );
+          await s3.upload(params).promise();
+          return res
+            .status(HTTP_OK)
+            .send(apiResponse(HTTP_OK, "Successfully uploaded photo.", null));
         } catch (err) {
           return next(
             new CustomError(
@@ -541,7 +539,7 @@ export function getUserPhoto(): RequestHandler {
           return res.status(HTTP_OK).send(
             apiResponse(HTTP_OK, "Retrieved photo successfully.", {
               url: url,
-              validity: "3 min",
+              validity: "15 min",
             })
           );
         } catch (err) {
