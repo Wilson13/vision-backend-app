@@ -65,18 +65,21 @@ export async function findKioskManagerByPhone(
   return KioskManager.findOne({ kioskPhone: kioskPhoneDoc._id });
 }
 
-// Display list of all Users.
+/**
+ * Display list of kiosk managers.
+ */
+
 export function getKioskManagers(): RequestHandler {
   return asyncHandler(async (req, res) => {
     const userDocs = await KioskManager.find({}, { _id: 0, __v: 0 })
-      .populate("kioskPhone")
+      .populate("kioskPhone", { __v: 0, _id: 0 })
       .exec();
     res.send(apiResponse(HTTP_OK, "Users retrieved.", userDocs));
   });
 }
 
-// If authorization is a success, save kiosk manager into DB
-// because it means this kiosk manager exists in Auth Server.
+// If authorization is a success, webhook will save kiosk manager
+// into DB because it means this kiosk manager exists in Auth Server.
 // Retrieve and display access token too since webhook/login
 // has been called by Auth Server.
 export function authorizeKioskManager(): RequestHandler {

@@ -51,6 +51,7 @@ const UserSchema: Schema = new Schema({
       },
       "The e-mail format is wrong.",
     ],
+    sparse: true,
   },
   postalCode: { type: Number, required: true },
   blockHseNo: { type: String, required: true },
@@ -79,11 +80,13 @@ UserSchema.post<UserInterface>("save", function (err, doc, next) {
     if (err.name === "MongoError" && err.code === 11000) {
       // According to RFC 7231, Conflicts are most likely to occur in
       // response to a PUT request but it's used for POST request too.
+      const keys = Object.keys(err.keyValue);
       return next(
         new CustomError(
           HTTP_CONFLICT,
-          `Duplicate key error: ${doc.constructor.modelName}`,
-          doc
+          `Duplicates found: '${keys[0]}'`,
+          err.keyValue
+          // doc
         )
       );
     }
