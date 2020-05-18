@@ -4,7 +4,6 @@ import validator from "validator";
 import { isNullOrUndefined } from "util";
 import AWS from "aws-sdk";
 import path from "path";
-import fs from "fs";
 
 import Case from "../models/case";
 import User, { UserInterface } from "../models/user";
