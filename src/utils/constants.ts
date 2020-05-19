@@ -12,6 +12,7 @@ export const STAGING_ENV = "staging";
 export const DEVELOPMENT_ENV = "dev";
 export const TEST_ENV = "test";
 export const CASE_STATUS_OPEN = "open";
+export const CASE_STATUS_PROCESSING = "processing";
 export const CASE_STATUS_MINISTER = "minister";
 export const CASE_STATUS_UNCONTACTABLE = "uncontactable";
 

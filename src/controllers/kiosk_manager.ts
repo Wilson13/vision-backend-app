@@ -74,7 +74,7 @@ export function getKioskManagers(): RequestHandler {
     const userDocs = await KioskManager.find({}, { _id: 0, __v: 0 })
       .populate("kioskPhone", { __v: 0, _id: 0 })
       .exec();
-    res.send(apiResponse(HTTP_OK, "Users retrieved.", userDocs));
+    res.send(apiResponse(HTTP_OK, "Kiosk managers retrieved.", userDocs));
   });
 }
 

@@ -5,6 +5,7 @@ import {
   CASE_STATUS_OPEN,
   CASE_STATUS_MINISTER,
   CASE_STATUS_UNCONTACTABLE,
+  CASE_STATUS_PROCESSING,
 } from "../utils/constants";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,6 +21,7 @@ export interface CaseInterface extends Document {
   location: string;
   queueNo: number;
   whatsappCall: boolean;
+  assignee: string; // kioskManager uuid
 }
 
 export const CaseSchema: Schema = new Schema({
@@ -51,12 +53,18 @@ export const CaseSchema: Schema = new Schema({
   status: {
     type: String,
     default: CASE_STATUS_OPEN,
-    enum: [CASE_STATUS_OPEN, CASE_STATUS_MINISTER, CASE_STATUS_UNCONTACTABLE],
+    enum: [
+      CASE_STATUS_OPEN,
+      CASE_STATUS_PROCESSING,
+      CASE_STATUS_MINISTER,
+      CASE_STATUS_UNCONTACTABLE,
+    ],
   },
   refId: { type: String, required: true },
   location: { type: String, required: true },
   queueNo: { type: Number, required: true },
   whatsappCall: { type: Boolean, default: false },
+  assignee: String,
 });
 
 // Compund index

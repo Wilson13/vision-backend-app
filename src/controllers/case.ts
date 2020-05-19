@@ -3,6 +3,7 @@ import validator from "validator";
 import { isNullOrUndefined } from "util";
 
 import Case from "../models/case";
+import KioskManager from "../models/kiosk_manager";
 import User, { UserInterface } from "../models/user";
 import Phone, { PhoneInterface } from "../models/phone";
 import asyncHandler from "../utils/async_handler";
@@ -15,6 +16,7 @@ import {
   GET_LIMIT as GET_LIST_LIMIT,
   CASE_STATUS_MINISTER,
   CASE_STATUS_UNCONTACTABLE,
+  CASE_STATUS_PROCESSING,
 } from "../utils/constants";
 
 export async function findUserByPhone(
@@ -99,7 +101,9 @@ export function validateUser(user: UserInterface): CustomError {
   else return null;
 }
 
-// Display list of Case.
+/**
+ * Display list of Case.
+ */
 export function getCases(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     const filter = { status: CASE_STATUS_OPEN };
@@ -169,7 +173,74 @@ export function deleteCase(): RequestHandler {
   });
 }
 
-// Update a case status, if it's not in one of the final states.
+/**
+ * Assign a case to one of the kiosk manager, if the uuid provided exists.
+ */
+export function assignCase(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    const updateStatus = req.body.status;
+
+    // Validate data
+    if (!req.params.uid) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "PATCH /case/:uid/, uid is required",
+          null
+        )
+      );
+    } else if (!req.body.assignee) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "body.assignee is required (uuid of kiosk manager)",
+          req.body
+        )
+      );
+    }
+
+    // Search for case
+    const caseDoc = await Case.findOne({
+      uid: req.params.uid,
+    }).exec();
+
+    if (!caseDoc) {
+      return next(
+        new CustomError(HTTP_NOT_FOUND, "Case not found", {
+          uid: req.params.uid,
+        })
+      );
+    } else if (caseDoc.status !== CASE_STATUS_OPEN) {
+      // Do not allow changing of status if it's not open
+      return next(
+        new CustomError(HTTP_BAD_REQUEST, "Case is not open.", {
+          status: caseDoc.status,
+        })
+      );
+    } else {
+      // Case is in valid state, search for kiosk manager.
+      const kioskManagerDoc = await KioskManager.findOne({
+        uid: req.body.assignee,
+      }).exec();
+
+      if (!kioskManagerDoc) {
+        return next(
+          new CustomError(HTTP_NOT_FOUND, "Kiosk manager does not exist.", null)
+        );
+      } else {
+        // Kiosk manager exists, insert UUID and update case status.
+        caseDoc.assignee = kioskManagerDoc.uid;
+        caseDoc.status = CASE_STATUS_PROCESSING;
+        await caseDoc.save();
+        return res.send(apiResponse(HTTP_OK, "Case is assigned.", null));
+      }
+    }
+  });
+}
+
+/**
+ * Close a case with a status update, if it's not in one of the final states.
+ */
 export function closeCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     const updateStatus = req.body.status;

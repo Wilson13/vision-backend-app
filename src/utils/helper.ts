@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import { MongoError } from "mongodb";
 import { HTTP_CONFLICT } from "./constants";
 import validator from "validator";
 
@@ -33,18 +32,20 @@ export class CustomError extends Error {
 }
 
 export function handleSaveError(
-  err: MongoError,
+  err,
   doc,
   next: (arg0?: CustomError) => void
 ): void {
   if (err.name === "MongoError" && err.code === 11000) {
     // According to RFC 7231, Conflicts are most likely to occur in
     // response to a PUT request but it's used for POST request too.
+    const keys = Object.keys(err.keyValue);
     return next(
       new CustomError(
         HTTP_CONFLICT,
-        `Duplicate key error: ${doc.constructor.modelName}`,
-        doc
+        `Duplicates found: '${keys[0]}'`,
+        err.keyValue
+        // doc
       )
     );
   } else {
