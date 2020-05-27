@@ -11,7 +11,7 @@ function setupRekcognition(): AWS.Rekognition {
   // Not sure why env variable for region not,
   // working hence requires a manual update here.
   AWS.config.update({
-    region: process.env.AWS_REGION,
+    region: process.env.APP_AWS_REGION,
   });
 
   // Set up AWS SDK

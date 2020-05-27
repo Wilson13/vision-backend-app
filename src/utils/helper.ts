@@ -14,7 +14,7 @@ export function apiResponse(
   const jsonRes = {
     status: status,
     message: message,
-    data: data,
+    data: JSON.stringify(data),
   };
 
   return jsonRes;

@@ -3,8 +3,9 @@ import { handleSaveError } from "../utils/helper";
 import { BaseSchema } from "./base_schema";
 import {
   CASE_STATUS_OPEN,
+  CASE_STATUS_CLOSED,
   CASE_STATUS_MINISTER,
-  CASE_STATUS_UNCONTACTABLE,
+  CASE_STATUS_WELFARE,
   CASE_STATUS_PROCESSING,
 } from "../utils/constants";
 import { v4 as uuidv4 } from "uuid";
@@ -55,9 +56,10 @@ export const CaseSchema: Schema = new Schema({
     default: CASE_STATUS_OPEN,
     enum: [
       CASE_STATUS_OPEN,
+      CASE_STATUS_CLOSED,
       CASE_STATUS_PROCESSING,
       CASE_STATUS_MINISTER,
-      CASE_STATUS_UNCONTACTABLE,
+      CASE_STATUS_WELFARE,
     ],
   },
   refId: { type: String, required: true },

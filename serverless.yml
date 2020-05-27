@@ -1,0 +1,48 @@
+service: meet-queue-backend
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: ap-southeast-1
+  memorySize: 128
+  profile: serverless-admin
+  timeout: 30
+  environment:
+    NODE_ENV: production
+    DB_URI: mongodb+srv://cluster0-evfkc.mongodb.net/meetqueuedb
+    DB_PASSWORD: V38y4taFWsBGdmoB
+    DB_USER: meet-queue-db-admin
+    AUTH_AUTHORIZE_URI: https://staging.auth.freshturfengineering.com/oauth/authorize/
+    AUTH_VERIFY_URI: https://staging.auth.freshturfengineering.com/oauth/verify
+    AUTH_OTP_URI: https://staging.auth.freshturfengineering.com/oauth/otp
+    AUTH_REDIRECT_URI: https://api.queue.freshturfengineering.com/webhook/login
+    AUTH_API_TOKEN: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZlbG9wZXJJZCI6IndpbHNvbiJ9.flzTtU3ingYjT3AOBOGFxUqEPx2D_vAVutxwzFYqPK1I4gySKwQf52SHmOCbwKRbdaU0XbrRLlZtXFnhM6THYg
+    AUTH_DEVELOPER_ID: wilson
+    AWS_BUCKET_NAME: meet-queue-user
+    APP_AWS_REGION: ap-southeast-1
+    AWS_SIGNED_URL_EXPIRES: "900"
+    # "VjM4eTR0YUZXc0JHZG1vQg=="
+    
+    # "QUtJQVZQS1pDUjdYNk1KQVlQSkw="
+    APP_AWS_ACCESS_KEY_ID: AKIAVPKZCR7X6MJAYPJL
+    # "eDJQT25RVFo0aVZGMFEyTUpqazlvZjdCd1ZScTNEb2p0RHVrNWZ0Mg=="
+    APP_AWS_SECRET_ACCESS_KEY: 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
+package:
+  exclude:
+    - src/**
+    - .env
+plugins:
+  - serverless-offline
+functions:
+  app:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /case
+          method: GET
+          cors: true
+          integration: LAMBDA
+      # - http: 
+      #     path: /{proxy+}
+      #     method: ANY
+      #     cors: true

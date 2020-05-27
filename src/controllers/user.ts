@@ -445,9 +445,9 @@ export function uploadUserPhoto(): RequestHandler {
         // Set the region
         try {
           AWS.config.update({
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            region: process.env.AWS_REGION,
+            accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+            region: process.env.APP_AWS_REGION,
           });
           // Create S3 service object
           const s3 = new AWS.S3({
@@ -515,7 +515,7 @@ export function getUserPhoto(): RequestHandler {
         try {
           // User found, retrieve photo from AMAZON S3 bucket
           // Set the region
-          AWS.config.update({ region: process.env.AWS_REGION });
+          AWS.config.update({ region: process.env.APP_AWS_REGION });
           // Create S3 service object
           const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 

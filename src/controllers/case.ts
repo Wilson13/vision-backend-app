@@ -15,8 +15,9 @@ import {
   CASE_STATUS_OPEN,
   GET_LIMIT as GET_LIST_LIMIT,
   CASE_STATUS_MINISTER,
-  CASE_STATUS_UNCONTACTABLE,
   CASE_STATUS_PROCESSING,
+  CASE_STATUS_CLOSED,
+  CASE_STATUS_WELFARE,
 } from "../utils/constants";
 
 export async function findUserByPhone(
@@ -31,6 +32,20 @@ export async function findUserByPhone(
   if (isNullOrUndefined(phoneDoc)) return null;
 
   return User.findOne({ phone: phoneDoc._id });
+}
+
+/**
+ * Check if the status provided is one of the final states,
+ * return false if it isn't.
+ * @param status
+ */
+function isFinalState(status: string): boolean {
+  return (
+    status === CASE_STATUS_CLOSED ||
+    status === CASE_STATUS_PROCESSING ||
+    status === CASE_STATUS_MINISTER ||
+    status === CASE_STATUS_WELFARE
+  );
 }
 
 export function validateNRIC(nric: string): CustomError {
@@ -106,27 +121,35 @@ export function validateUser(user: UserInterface): CustomError {
  */
 export function getCases(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    const filter = { status: CASE_STATUS_OPEN };
+    // TODO: Should not only get open cases?
+    // const filter = { status: CASE_STATUS_OPEN };
+    const filter = {};
     const sort = {};
+    // TODO: Multi location?
     if (req.query.location) {
       filter["location"] = req.query.location;
     } else if (req.query.status) {
       if (
         !(
           req.query.status === CASE_STATUS_OPEN ||
-          req.query.status === CASE_STATUS_MINISTER ||
-          req.query.status === CASE_STATUS_UNCONTACTABLE
+          isFinalState(req.query.status)
         )
       ) {
         return next(
           new CustomError(
             HTTP_BAD_REQUEST,
-            "status and can only be [open|minister|uncontactable].",
+            `status and can only be [
+              ${CASE_STATUS_OPEN}|
+              ${CASE_STATUS_CLOSED}|
+              ${CASE_STATUS_PROCESSING}|
+              ${CASE_STATUS_MINISTER}|
+              ${CASE_STATUS_WELFARE}
+            ].`,
             req.body
           )
         );
       } else {
-        filter.status = req.query.status;
+        filter["status"] = req.query.status;
       }
     } else if (req.query.sort) {
       // If sort by query given as 1, sort by ascending.
@@ -136,7 +159,17 @@ export function getCases(): RequestHandler {
     const caseDocs = await Case.find(filter, { _id: 0, __v: 0 })
       .limit(GET_LIST_LIMIT)
       .sort(sort)
+      .lean()
       .exec();
+    // const caseDocs = {
+    //   "Node env": process.env.NODE_ENV,
+    //   "Db uri": process.env.DB_URI,
+    //   "Db user": process.env.DB_USER,
+    //   "Db password": process.env.DB_PASSWORD,
+    //   APP_AWS_ACCESS_KEY_ID: process.env.APP_AWS_ACCESS_KEY_ID,
+    //   APP_AWS_SECRET_ACCESS_KEY: process.env.APP_AWS_SECRET_ACCESS_KEY,
+    //   APP_AWS_REGION: process.env.APP_AWS_REGION,
+    // };
     res.send(apiResponse(HTTP_OK, "Cases retrieved.", caseDocs));
   });
 }
@@ -178,8 +211,6 @@ export function deleteCase(): RequestHandler {
  */
 export function assignCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    const updateStatus = req.body.status;
-
     // Validate data
     if (!req.params.uid) {
       return next(
@@ -254,17 +285,17 @@ export function closeCase(): RequestHandler {
         )
       );
     } else {
-      if (
-        !updateStatus ||
-        !(
-          updateStatus === CASE_STATUS_MINISTER ||
-          updateStatus === CASE_STATUS_UNCONTACTABLE
-        )
-      ) {
+      // Update
+      if (!updateStatus || isFinalState(req.query.status)) {
         return next(
           new CustomError(
             HTTP_BAD_REQUEST,
-            "status is required and can only be [minister|uncontactable].",
+            `closing status and can only be [
+              ${CASE_STATUS_CLOSED}|
+              ${CASE_STATUS_PROCESSING}|
+              ${CASE_STATUS_MINISTER}|
+              ${CASE_STATUS_WELFARE}
+            ].`,
             req.body
           )
         );
@@ -276,10 +307,7 @@ export function closeCase(): RequestHandler {
 
       if (caseDoc) {
         // Do not allow changing of status if it's in one of the final state.
-        if (
-          caseDoc.status === CASE_STATUS_MINISTER ||
-          caseDoc.status === CASE_STATUS_UNCONTACTABLE
-        ) {
+        if (isFinalState(caseDoc.status)) {
           return next(
             new CustomError(HTTP_BAD_REQUEST, "Case is closed.", caseDoc)
           );
