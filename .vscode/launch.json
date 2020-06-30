@@ -3,17 +3,23 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [ 
         {
-            "name": "Dev",
+            "name": "Serverless",
             "type": "node",
             "request": "launch",
-            "envFile": "${workspaceFolder}/.env",
+            // "cwd": "${workspaceFolder}",
+            // "envFile": "${workspaceFolder}/.env",
             "env": {
-              "NODE_ENV": "dev"
+            //   "NODE_ENV": "dev",
+            //   "SLS_DEBUG": "*"   
             },
-            "runtimeArgs": ["-r", "ts-node/register"],
-            "args": ["${workspaceFolder}/src/bin/www.ts"],
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script",
+                "offline",
+            ],
+            "port": 5858,
             "outputCapture": "std"
         }
     ]

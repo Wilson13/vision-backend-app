@@ -10,14 +10,16 @@ export function apiResponse(
   status: number,
   message: string,
   data: object
-): object {
+): string {
   const jsonRes = {
     status: status,
     message: message,
-    data: JSON.stringify(data),
+    data: data,
   };
 
-  return jsonRes;
+  const jsonStr = JSON.stringify(jsonRes);
+  // return JSON.parse(jsonStr);
+  return jsonStr;
 }
 
 export class CustomError extends Error {
