@@ -14,10 +14,12 @@ import {
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
   GET_LIMIT as GET_LIST_LIMIT,
-  CASE_STATUS_MINISTER,
+  CASE_CATEGORY_MINISTER,
   CASE_STATUS_PROCESSING,
   CASE_STATUS_CLOSED,
-  CASE_STATUS_WELFARE,
+  CASE_CATEGORY_WELFARE,
+  CASE_STATUS_COMPLETED,
+  CASE_CATEGORY_NORMAL,
 } from "../utils/constants";
 
 export async function findUserByPhone(
@@ -43,8 +45,20 @@ function isFinalState(status: string): boolean {
   return (
     status === CASE_STATUS_CLOSED ||
     status === CASE_STATUS_PROCESSING ||
-    status === CASE_STATUS_MINISTER ||
-    status === CASE_STATUS_WELFARE
+    status === CASE_STATUS_COMPLETED
+  );
+}
+
+/**
+ * Check if the category provided is one of the valid category values,
+ * return false if it isn't.
+ * @param category
+ */
+function isCategory(category: string): boolean {
+  return (
+    category === CASE_CATEGORY_NORMAL ||
+    category === CASE_CATEGORY_WELFARE ||
+    category === CASE_CATEGORY_MINISTER
   );
 }
 
@@ -126,9 +140,14 @@ export function getCases(): RequestHandler {
     const filter = {};
     const sort = {};
     // TODO: Multi location?
-    if (req.query.location) {
+    // != null rules out null and undefined values
+    console.log(req.query);
+    if (req.query.location != null) {
       filter["location"] = req.query.location;
-    } else if (req.query.status) {
+    }
+
+    // Check if status is a valid value
+    if (req.query.status != null) {
       if (
         !(
           req.query.status === CASE_STATUS_OPEN ||
@@ -138,20 +157,40 @@ export function getCases(): RequestHandler {
         return next(
           new CustomError(
             HTTP_BAD_REQUEST,
-            `status and can only be [
-              ${CASE_STATUS_OPEN}|
-              ${CASE_STATUS_CLOSED}|
-              ${CASE_STATUS_PROCESSING}|
-              ${CASE_STATUS_MINISTER}|
-              ${CASE_STATUS_WELFARE}
-            ].`,
-            req.body
+            `status can only be [` +
+              `${CASE_STATUS_OPEN}|` +
+              `${CASE_STATUS_CLOSED}|` +
+              `${CASE_STATUS_PROCESSING}|` +
+              `${CASE_STATUS_COMPLETED}` +
+              `].`,
+            null
           )
         );
       } else {
         filter["status"] = req.query.status;
       }
-    } else if (req.query.sort) {
+    }
+
+    // Check if category is a valid value
+    if (req.query.category) {
+      if (!isCategory(req.query.category)) {
+        return next(
+          new CustomError(
+            HTTP_BAD_REQUEST,
+            `category can only be [` +
+              `${CASE_CATEGORY_NORMAL}|` +
+              `${CASE_CATEGORY_WELFARE}|` +
+              `${CASE_CATEGORY_MINISTER}` +
+              `].`,
+            req.body
+          )
+        );
+      } else {
+        filter["category"] = req.query.category;
+      }
+    }
+
+    if (req.query.sort) {
       // If sort by query given as 1, sort by ascending.
       // Else, sort by descending (even when no query is given).
       sort["createdAt"] = req.query.sort == 1 ? 1 : -1;
@@ -161,15 +200,7 @@ export function getCases(): RequestHandler {
       .sort(sort)
       .lean()
       .exec();
-    // const caseDocs = {
-    //   "Node env": process.env.NODE_ENV,
-    //   "Db uri": process.env.DB_URI,
-    //   "Db user": process.env.DB_USER,
-    //   "Db password": process.env.DB_PASSWORD,
-    //   APP_AWS_ACCESS_KEY_ID: process.env.APP_AWS_ACCESS_KEY_ID,
-    //   APP_AWS_SECRET_ACCESS_KEY: process.env.APP_AWS_SECRET_ACCESS_KEY,
-    //   APP_AWS_REGION: process.env.APP_AWS_REGION,
-    // };
+
     res.send(apiResponse(HTTP_OK, "Cases retrieved.", caseDocs));
   });
 }
@@ -293,8 +324,8 @@ export function closeCase(): RequestHandler {
             `closing status and can only be [
               ${CASE_STATUS_CLOSED}|
               ${CASE_STATUS_PROCESSING}|
-              ${CASE_STATUS_MINISTER}|
-              ${CASE_STATUS_WELFARE}
+              ${CASE_CATEGORY_MINISTER}|
+              ${CASE_CATEGORY_WELFARE}
             ].`,
             req.body
           )

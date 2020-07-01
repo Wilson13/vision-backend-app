@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "NODE_ENV=production && npm run tsc && sls deploy",
+    "deploy": "NODE_ENV=production && tsc && sls deploy",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "debug": "NODE_ENV=dev && ts-node src/bin/www.ts",
-    "offline": "npm run tsc && node --inspect-brk=5858 ./node_modules/.bin/serverless offline -s dev",
+    "offline": "tsc && node --inspect-brk=5858 ./node_modules/.bin/serverless offline -s dev",
     "start": "NODE_ENV=production && tsc && node dist/bin/www.js",
     "tsc": "tsc && cp -R src/views dist/",
     "test-coverage": "jest --coverage",

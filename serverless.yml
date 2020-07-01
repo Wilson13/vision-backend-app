@@ -41,7 +41,10 @@ functions:
           path: /case
           method: GET
           cors: true
-          integration: LAMBDA
+          request:
+            parameters:
+              querystrings:
+                location: false
       # - http: 
       #     path: /{proxy+}
       #     method: ANY

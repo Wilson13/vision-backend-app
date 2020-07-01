@@ -4,9 +4,11 @@ import { BaseSchema } from "./base_schema";
 import {
   CASE_STATUS_OPEN,
   CASE_STATUS_CLOSED,
-  CASE_STATUS_MINISTER,
-  CASE_STATUS_WELFARE,
+  CASE_STATUS_COMPLETED,
   CASE_STATUS_PROCESSING,
+  CASE_CATEGORY_NORMAL,
+  CASE_CATEGORY_MINISTER,
+  CASE_CATEGORY_WELFARE,
 } from "../utils/constants";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,6 +20,7 @@ export interface CaseInterface extends Document {
   description: string;
   language: string;
   status: string;
+  category: string;
   refId: string;
   location: string;
   queueNo: number;
@@ -56,11 +59,15 @@ export const CaseSchema: Schema = new Schema({
     default: CASE_STATUS_OPEN,
     enum: [
       CASE_STATUS_OPEN,
-      CASE_STATUS_CLOSED,
       CASE_STATUS_PROCESSING,
-      CASE_STATUS_MINISTER,
-      CASE_STATUS_WELFARE,
+      CASE_STATUS_CLOSED,
+      CASE_STATUS_COMPLETED,
     ],
+  },
+  category: {
+    type: String,
+    default: CASE_CATEGORY_NORMAL,
+    enum: [CASE_CATEGORY_NORMAL, CASE_CATEGORY_WELFARE, CASE_CATEGORY_MINISTER],
   },
   refId: { type: String, required: true },
   location: { type: String, required: true },

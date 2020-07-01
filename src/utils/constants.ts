@@ -13,9 +13,11 @@ export const DEVELOPMENT_ENV = "dev";
 export const TEST_ENV = "test";
 export const CASE_STATUS_OPEN = "open";
 export const CASE_STATUS_CLOSED = "closed";
+export const CASE_STATUS_COMPLETED = "completed";
 export const CASE_STATUS_PROCESSING = "processing";
-export const CASE_STATUS_MINISTER = "minister";
-export const CASE_STATUS_WELFARE = "welfare";
+export const CASE_CATEGORY_NORMAL = "normal";
+export const CASE_CATEGORY_MINISTER = "minister";
+export const CASE_CATEGORY_WELFARE = "welfare";
 
 export const ERROR_MSG_EMAIL = "email format is wrong";
 
