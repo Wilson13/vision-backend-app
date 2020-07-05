@@ -135,13 +135,10 @@ export function validateUser(user: UserInterface): CustomError {
  */
 export function getCases(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
-    // TODO: Should not only get open cases?
-    // const filter = { status: CASE_STATUS_OPEN };
     const filter = {};
     const sort = {};
     // TODO: Multi location?
     // != null rules out null and undefined values
-    console.log(req.query);
     if (req.query.location != null) {
       filter["location"] = req.query.location;
     }
@@ -182,7 +179,7 @@ export function getCases(): RequestHandler {
               `${CASE_CATEGORY_WELFARE}|` +
               `${CASE_CATEGORY_MINISTER}` +
               `].`,
-            req.body
+            null
           )
         );
       } else {

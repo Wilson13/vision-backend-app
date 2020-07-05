@@ -12,7 +12,7 @@ import helmet from "helmet"; // Secure Express app by setting various HTTP heade
 import errorResponse from "./utils/error_json";
 
 // import indexRouter from "./routes/index";
-// import usersRouter from "./routes/user";
+import usersRouter from "./routes/user";
 import caseRouter from "./routes/case";
 // import kioskManagerRouter from "./routes/kiosk_manager";
 // import phonesRouter from "./routes/phone";
@@ -60,8 +60,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // Routers
 // app.use("/", indexRouter);
 // app.use("/face", faceRouter);
-// app.use("/user", usersRouter);
-app.use("/case", caseRouter);
+app.use("/users", usersRouter);
+app.use("/cases", caseRouter);
 // app.use("/phone", phonesRouter);
 // app.use("/kiosk/manager", kioskManagerRouter);
 // app.use("/kiosk/phone", kioskPhonesRouter);

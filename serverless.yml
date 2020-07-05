@@ -34,17 +34,46 @@ package:
 plugins:
   - serverless-offline
 functions:
-  app:
+  getCases:
     handler: dist/bin/www.handler
     events: 
       - http: 
-          path: /case
+          path: /cases
           method: GET
           cors: true
           request:
             parameters:
               querystrings:
                 location: false
+  createCase:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users/{uid}/cases
+          method: POST
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
+  closeCase:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users/{uid}/cases/close
+          method: PATCH
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
+  listUser:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users
+          method: GET
+          cors: true
       # - http: 
       #     path: /{proxy+}
       #     method: ANY

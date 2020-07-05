@@ -616,7 +616,9 @@ export function searchUser(): RequestHandler {
   });
 }
 
-// Create a new case that reference the user
+/**
+ * Create a new case that reference the user (this is the only case-related API that is a subset of user route)
+ * */
 export function createCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     if (
