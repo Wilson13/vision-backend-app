@@ -7,6 +7,9 @@ const router = express.Router();
 /* GET users listing. */
 router.get("/", userController.getUsers());
 
+/* Create user cases */
+router.get("/:uid/cases", userController.getCases());
+
 /* Create new user */
 router.post("/", userController.createUser());
 
@@ -14,7 +17,7 @@ router.post("/", userController.createUser());
 router.post("/search", userController.searchUser());
 
 /* Create new user case */
-router.post("/:uid/case", userController.createCase());
+router.post("/:uid/cases", userController.createCase());
 
 /* Upload user's photo */
 router.post(

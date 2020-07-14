@@ -40,17 +40,23 @@ functions:
       - http: 
           path: /cases
           method: GET
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
           request:
             parameters:
               querystrings:
+                status: false
                 location: false
-  createCase:
+                sort: false
+  assignCase:
     handler: dist/bin/www.handler
     events: 
       - http: 
-          path: /users/{uid}/cases
+          path: /cases/{uid}/assign
           method: POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
           request:
             parameters:
@@ -60,20 +66,76 @@ functions:
     handler: dist/bin/www.handler
     events: 
       - http: 
-          path: /users/{uid}/cases/close
-          method: PATCH
+          path: /cases/{uid}/close
+          method: POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
           request:
             parameters:
               paths:
                 uid: true
+  categorizeCase:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /cases/{uid}/categorize
+          method: POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
+  createUser:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users
+          method: POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
+          cors: true
   listUser:
     handler: dist/bin/www.handler
     events: 
       - http: 
           path: /users
           method: GET
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
+  getUserCases:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users/{uid}/cases
+          method: GET
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
+              querystrings:
+                status: false
+                location: false
+                sort: false
+  createCase:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /users/{uid}/cases
+          method: POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
       # - http: 
       #     path: /{proxy+}
       #     method: ANY

@@ -6,10 +6,13 @@ const router = express.Router();
 router.get("/", caseController.getCases());
 
 /* Assign case to a kiosk manager */
-router.patch("/:uid/assign", caseController.assignCase());
+router.post("/:uid/assign", caseController.assignCase());
 
 /* Close case with status */
-router.patch("/:uid", caseController.closeCase());
+router.post("/:uid/close", caseController.closeCase());
+
+/* Update case with category */
+router.post("/:uid/categorize", caseController.categorizeCase());
 
 router.delete("/:uid", caseController.deleteCase());
 

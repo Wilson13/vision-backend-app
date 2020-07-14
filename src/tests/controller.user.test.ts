@@ -9,7 +9,7 @@ import Phone from "../models/phone";
 import { getUsers, createUser } from "../controllers/user";
 
 import * as httpCode from "../utils/constants";
-import User from "../models/user";
+import User from "../models/user_deprecated";
 
 const request = supertest(app);
 const dbService = process.env.TEST_DB_SERVICE;

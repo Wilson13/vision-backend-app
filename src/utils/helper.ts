@@ -1,5 +1,12 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import { HTTP_CONFLICT } from "./constants";
+import {
+  HTTP_CONFLICT,
+  CASE_STATUS_CLOSED,
+  CASE_STATUS_COMPLETED,
+  CASE_CATEGORY_NORMAL,
+  CASE_CATEGORY_WELFARE,
+  CASE_CATEGORY_MINISTER,
+} from "./constants";
 import validator from "validator";
 
 export function beautifyJSONString(value: string): string {
@@ -97,4 +104,26 @@ export function validateURI(
   } else result.status = true;
 
   return result;
+}
+
+/**
+ * Check if the status provided is one of the final states,
+ * return false if it isn't.
+ * @param status
+ */
+export function isFinalState(status: string): boolean {
+  return status === CASE_STATUS_CLOSED || status === CASE_STATUS_COMPLETED;
+}
+
+/**
+ * Check if the category provided is one of the valid category values,
+ * return false if it isn't.
+ * @param category
+ */
+export function isCategory(category: string): boolean {
+  return (
+    category === CASE_CATEGORY_NORMAL ||
+    category === CASE_CATEGORY_WELFARE ||
+    category === CASE_CATEGORY_MINISTER
+  );
 }

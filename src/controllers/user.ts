@@ -9,7 +9,12 @@ import Case from "../models/case";
 import User, { UserInterface } from "../models/user";
 import Phone, { PhoneInterface } from "../models/phone";
 import asyncHandler from "../utils/async_handler";
-import { apiResponse, CustomError } from "../utils/helper";
+import {
+  apiResponse,
+  CustomError,
+  isFinalState,
+  isCategory,
+} from "../utils/helper";
 import {
   HTTP_BAD_REQUEST,
   HTTP_OK,
@@ -33,6 +38,13 @@ import {
   ERROR_MSG_UNIT_NO,
   ERROR_UPDATE_FIELD,
   ERROR_MSG_PHONE_NUMBER_FORMAT,
+  CASE_STATUS_PROCESSING,
+  CASE_STATUS_COMPLETED,
+  CASE_CATEGORY_NORMAL,
+  CASE_CATEGORY_WELFARE,
+  CASE_CATEGORY_MINISTER,
+  GET_LIMIT,
+  CASE_STATUS_CLOSED,
 } from "../utils/constants";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -240,49 +252,30 @@ function validatePatchUser(patchUser): string {
  * @param user UserInterface
  * @returns CustomError
  */
-export function validateCreateUser(user: UserInterface): CustomError {
-  if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
-  else if (
-    !user.nric ||
-    !user.name ||
-    !user.phone ||
-    !user.race ||
-    !user.gender ||
-    !user.maritalStatus ||
-    !user.occupation ||
-    !user.postalCode ||
-    !user.blockHseNo ||
-    !user.address ||
-    !user.flatType
-  ) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "nric, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
-      user
-    );
-  } else if (validateNRIC(user.nric)) {
-    return validateNRIC(user.nric);
-    // } else if (!isNullOrUndefined(user.email) && !validator.isEmail(user.email))
-    //   return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
-    // else if (validateRace(user.race)) {
-    //   return new CustomError(HTTP_BAD_REQUEST, ERROR_MSG_RACE, user);
-    // } else if (!validator.isNumeric(user.postalCode.toString())) {
-    //   return new CustomError(
-    //     HTTP_BAD_REQUEST,
-    //     "postalCode needs to be a number",
-    //     user
-    //   );
-    // } else if (
-    //   user.noOfChildren &&
-    //   !validator.isNumeric(user.noOfChildren.toString())
-    // ) {
-    //   return new CustomError(
-    //     HTTP_BAD_REQUEST,
-    //     "noOfChildren needs to be a number",
-    //     user
-    //   );
-  } else return null;
-}
+// export function validateCreateUserDeprecated(user: UserInterface): CustomError {
+//   if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
+//   else if (
+//     !user.nric ||
+//     !user.name ||
+//     !user.phone ||
+//     !user.race ||
+//     !user.gender ||
+//     !user.maritalStatus ||
+//     !user.occupation ||
+//     !user.postalCode ||
+//     !user.blockHseNo ||
+//     !user.address ||
+//     !user.flatType
+//   ) {
+//     return new CustomError(
+//       HTTP_BAD_REQUEST,
+//       "nric, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
+//       user
+//     );
+//   } else if (validateNRIC(user.nric)) {
+//     return validateNRIC(user.nric);
+//   } else return null;
+// }
 
 /**
  * Display list of all Users.
@@ -302,34 +295,51 @@ export function getUsers(): RequestHandler {
 }
 
 /**
- * Create a new user
+ * Deprecated: Create a new user (with full info)
  */
+// export function createUser(): RequestHandler {
+//   return asyncHandler(async (req, res, next) => {
+//     // Return error if validation of user fails
+//     const user = req.body;
+//     const err = validateCreateUser(user);
+
+//     if (err) {
+//       // Delete phone created earlier
+//       return next(err);
+//     } else if (user.dob != null && !dateRegex.test(user.dob)) {
+//       return next(
+//         new CustomError(
+//           HTTP_BAD_REQUEST,
+//           "Please send dob in ISO 8601 format (yyyy-MM-dd).",
+//           req.body
+//         )
+//       );
+//     } else if (user.dob != null) {
+//       const dob = new Date(user.dob);
+//       user["dob"] = dob;
+//     }
+
+//     const patchUserValStr = validateUserDataFormat(req.body);
+//     if (!isNullOrUndefined(patchUserValStr)) {
+//       return next(new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body));
+//     }
+
+//     // Reference phone created earlier
+//     const userDoc = new User(user);
+
+//     // Save User with newly added Phone's id
+//     await userDoc.save();
+//     res.send(apiResponse(HTTP_OK, "User created.", userDoc));
+//   });
+// }
+
 export function createUser(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     // Return error if validation of user fails
     const user = req.body;
-    const err = validateCreateUser(user);
 
-    if (err) {
-      // Delete phone created earlier
-      return next(err);
-    } else if (user.dob != null && !dateRegex.test(user.dob)) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "Please send dob in ISO 8601 format (yyyy-MM-dd).",
-          req.body
-        )
-      );
-    } else if (user.dob != null) {
-      const dob = new Date(user.dob);
-      user["dob"] = dob;
-    }
-
-    const patchUserValStr = validateUserDataFormat(req.body);
-    if (!isNullOrUndefined(patchUserValStr)) {
-      return next(new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body));
-    }
+    if (req.body.uid == null)
+      return next(new CustomError(HTTP_BAD_REQUEST, "uid is required", user));
 
     // Reference phone created earlier
     const userDoc = new User(user);
@@ -617,7 +627,8 @@ export function searchUser(): RequestHandler {
 }
 
 /**
- * Create a new case that reference the user (this is the only case-related API that is a subset of user route)
+ * Create a new case that reference the user (this is the only case-related API that is a subset of user route).
+ * If there is an existing case, user is not allowed to create a new one.
  * */
 export function createCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
@@ -626,12 +637,13 @@ export function createCase(): RequestHandler {
       !req.body.description ||
       !req.body.language ||
       !req.body.location ||
-      !req.body.date
+      !req.body.date ||
+      !req.body.refId
     ) {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "subject, description, language, location, date is required.",
+          "subject, description, language, location, date, refId is required.",
           req.body
         )
       );
@@ -682,18 +694,21 @@ export function createCase(): RequestHandler {
         req.body.whatsappCall = tempVal == "true" ? true : false;
       }
     }
-    if (req.params?.uid) {
-      const userDoc = await User.findOne({ uid: req.params.uid }).exec();
+    if (req.params?.uid == null) {
+      return next(new Error("POST /users/:uid/cases, 'uid' is required"));
+    } else {
+      const userId = req.params.uid;
+      const userDoc = await User.findOne({ uid: userId }).exec();
 
       if (!userDoc) {
         return next(
           new CustomError(HTTP_NOT_FOUND, "User not found.", {
-            uid: req.params.uid,
+            uid: userId,
           })
         );
       }
 
-      // Pprepare data
+      // Prepare data
       const {
         subject,
         location,
@@ -701,6 +716,7 @@ export function createCase(): RequestHandler {
         whatsappCall,
         language,
       } = req.body;
+
       // Add time portion to date as user is
       // only required to provide date.
       const currentTime = new Date().toISOString();
@@ -714,14 +730,13 @@ export function createCase(): RequestHandler {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
 
-      // Search for existing open case created today, at this location, by this user.
+      // Search for existing open case by this user.
+      // Not restricted to created today, at this location anymore.
       const existingCase = await Case.findOne({
-        location: location,
-        createdAt: { $gte: start, $lt: end },
-        nric: userDoc.nric,
+        // location: location,
+        // createdAt: { $gte: start, $lt: end },
+        userId: userId,
         status: CASE_STATUS_OPEN,
-      }).sort({
-        createdAt: -1,
       });
 
       if (existingCase) {
@@ -751,21 +766,20 @@ export function createCase(): RequestHandler {
         newQueueNo = 1;
       }
 
-      let caseRefId = `${userDoc.postalCode}_${userDoc.blockHseNo}`;
-      if (userDoc.floorNo) caseRefId += `_${userDoc.floorNo}`;
-      if (userDoc.unitNo) caseRefId += `_${userDoc.unitNo}`;
+      // let caseRefId = `${userDoc.postalCode}_${userDoc.blockHseNo}`;
+      // if (userDoc.floorNo) caseRefId += `_${userDoc.floorNo}`;
+      // if (userDoc.unitNo) caseRefId += `_${userDoc.unitNo}`;
 
       // Doesn't use default Date.now to insert createdAt to prevent
       // database timezone differing with client timezone.
       // TODO: Configure system to timezone.
       const newCase = new Case({
-        userId: userDoc.uid,
-        nric: userDoc.nric,
+        userId: userId,
         subject: subject,
         description: description,
         language: language,
         status: CASE_STATUS_OPEN,
-        refId: caseRefId,
+        refId: req.body.refId,
         location: location,
         queueNo: newQueueNo,
         whatsappCall: whatsappCall,
@@ -774,8 +788,90 @@ export function createCase(): RequestHandler {
 
       const savedCase = await newCase.save();
       return res.send(apiResponse(HTTP_OK, "New case created.", savedCase));
+    }
+  });
+}
+
+/**
+ * Retrieve a list of Cases belonging to this particular user.
+ */
+export function getCases(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    if (req.params?.uid == null) {
+      // type coersion-check / juggling-check
+      return next(new Error("GET /users/:uid/cases, 'uid' is required"));
     } else {
-      return next(new Error("POST /user/:uid/case, 'uid' is required"));
+      const userId = req.params.uid;
+      const userDoc = await User.findOne({ uid: req.params.uid }).exec();
+      if (!userDoc) {
+        return next(
+          new CustomError(HTTP_NOT_FOUND, "User not found.", {
+            uid: req.params.uid,
+          })
+        );
+      }
+
+      const filter = {};
+      const sort = {};
+      filter["userId"] = userId;
+
+      // Check if status is a valid value
+      if (req.query.status != null) {
+        if (
+          !(
+            req.query.status === CASE_STATUS_OPEN ||
+            req.query.status === CASE_STATUS_PROCESSING ||
+            isFinalState(req.query.status)
+          )
+        ) {
+          return next(
+            new CustomError(
+              HTTP_BAD_REQUEST,
+              `status can only be [` +
+                `${CASE_STATUS_OPEN}|` +
+                `${CASE_STATUS_PROCESSING}|` +
+                `${CASE_STATUS_CLOSED}|` +
+                `${CASE_STATUS_COMPLETED}` +
+                `].`,
+              null
+            )
+          );
+        } else {
+          filter["status"] = req.query.status;
+        }
+      }
+
+      // Check if category is a valid value
+      if (req.query.category) {
+        if (!isCategory(req.query.category)) {
+          return next(
+            new CustomError(
+              HTTP_BAD_REQUEST,
+              `category can only be [` +
+                `${CASE_CATEGORY_NORMAL}|` +
+                `${CASE_CATEGORY_WELFARE}|` +
+                `${CASE_CATEGORY_MINISTER}` +
+                `].`,
+              null
+            )
+          );
+        } else {
+          filter["category"] = req.query.category;
+        }
+      }
+
+      if (req.query.sort) {
+        // If sort by query given as 1, sort by ascending.
+        // Else, sort by descending (even when no query is given).
+        sort["createdAt"] = req.query.sort == 1 ? 1 : -1;
+      }
+      const caseDocs = await Case.find(filter, { _id: 0, __v: 0 })
+        .limit(GET_LIMIT)
+        .sort(sort)
+        .lean()
+        .exec();
+
+      res.send(apiResponse(HTTP_OK, "Cases retrieved.", caseDocs));
     }
   });
 }

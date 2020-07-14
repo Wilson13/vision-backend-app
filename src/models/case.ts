@@ -15,7 +15,6 @@ import { v4 as uuidv4 } from "uuid";
 export interface CaseInterface extends Document {
   uid: string;
   userId: string;
-  nric: string;
   subject: string;
   description: string;
   language: string;
@@ -32,7 +31,6 @@ export const CaseSchema: Schema = new Schema({
   ...BaseSchema.obj,
   uid: { type: String, required: true, unique: true, default: uuidv4 },
   userId: { type: String, required: true },
-  nric: { type: String, required: true },
   subject: {
     type: String,
     required: true,

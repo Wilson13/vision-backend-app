@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import validator from "validator";
 import { isNullOrUndefined } from "util";
 
 import Case from "../models/case";
@@ -7,13 +6,18 @@ import KioskManager from "../models/kiosk_manager";
 import User, { UserInterface } from "../models/user";
 import Phone, { PhoneInterface } from "../models/phone";
 import asyncHandler from "../utils/async_handler";
-import { apiResponse, CustomError } from "../utils/helper";
+import {
+  apiResponse,
+  CustomError,
+  isFinalState,
+  isCategory,
+} from "../utils/helper";
 import {
   HTTP_BAD_REQUEST,
   HTTP_OK,
   HTTP_NOT_FOUND,
   CASE_STATUS_OPEN,
-  GET_LIMIT as GET_LIST_LIMIT,
+  GET_LIMIT,
   CASE_CATEGORY_MINISTER,
   CASE_STATUS_PROCESSING,
   CASE_STATUS_CLOSED,
@@ -36,32 +40,6 @@ export async function findUserByPhone(
   return User.findOne({ phone: phoneDoc._id });
 }
 
-/**
- * Check if the status provided is one of the final states,
- * return false if it isn't.
- * @param status
- */
-function isFinalState(status: string): boolean {
-  return (
-    status === CASE_STATUS_CLOSED ||
-    status === CASE_STATUS_PROCESSING ||
-    status === CASE_STATUS_COMPLETED
-  );
-}
-
-/**
- * Check if the category provided is one of the valid category values,
- * return false if it isn't.
- * @param category
- */
-function isCategory(category: string): boolean {
-  return (
-    category === CASE_CATEGORY_NORMAL ||
-    category === CASE_CATEGORY_WELFARE ||
-    category === CASE_CATEGORY_MINISTER
-  );
-}
-
 export function validateNRIC(nric: string): CustomError {
   const nricRegex = /^(S|T|F|G)\d{7}.$/;
 
@@ -77,61 +55,7 @@ export function validateNRIC(nric: string): CustomError {
 }
 
 /**
- * This function was created to keep input validation outside of models,
- * which resulted in it being required in multiple places. Reason for not
- * relying on mongoose validation is not only because it should be handled
- * before data layer, but also to return 400 BAD REQEUST for invalid input,
- * rather than 500 INTERNAL SERVER ERROR that will be returned upon main app.ts
- * error capturing mechanism. In summary, it's an active error handling.
- *
- * @param user UserInterface
- * @returns CustomError
- */
-export function validateUser(user: UserInterface): CustomError {
-  if (!user) return new CustomError(HTTP_BAD_REQUEST, "User is required", null);
-  else if (
-    !user.nric ||
-    !user.email ||
-    !user.name ||
-    !user.phone ||
-    !user.race ||
-    !user.gender ||
-    !user.maritalStatus ||
-    !user.occupation ||
-    !user.postalCode ||
-    !user.blockHseNo ||
-    !user.address ||
-    !user.flatType
-  ) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "nric, email, name, phone, race, gender, maritalStatus, occupation, postalCode, blockHseNo, address, flatType are required",
-      user
-    );
-  } else if (!validator.isNumeric(user.postalCode.toString())) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "postalCode needs to be a number",
-      user
-    );
-  } else if (
-    user.noOfChildren &&
-    !validator.isNumeric(user.noOfChildren.toString())
-  ) {
-    return new CustomError(
-      HTTP_BAD_REQUEST,
-      "noOfChildren needs to be a number",
-      user
-    );
-  } else if (validateNRIC(user.nric)) {
-    return validateNRIC(user.nric);
-  } else if (!validator.isEmail(user.email))
-    return new CustomError(HTTP_BAD_REQUEST, "invalid email ", user);
-  else return null;
-}
-
-/**
- * Display list of Case.
+ * Retrieve a list of Cases.
  */
 export function getCases(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
@@ -148,6 +72,7 @@ export function getCases(): RequestHandler {
       if (
         !(
           req.query.status === CASE_STATUS_OPEN ||
+          req.query.status === CASE_STATUS_PROCESSING ||
           isFinalState(req.query.status)
         )
       ) {
@@ -193,7 +118,7 @@ export function getCases(): RequestHandler {
       sort["createdAt"] = req.query.sort == 1 ? 1 : -1;
     }
     const caseDocs = await Case.find(filter, { _id: 0, __v: 0 })
-      .limit(GET_LIST_LIMIT)
+      .limit(GET_LIMIT)
       .sort(sort)
       .lean()
       .exec();
@@ -235,7 +160,7 @@ export function deleteCase(): RequestHandler {
 }
 
 /**
- * Assign a case to one of the kiosk manager, if the uuid provided exists.
+ * Assign a case to one of the volunteer, if the uuid provided exists.
  */
 export function assignCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
@@ -244,7 +169,7 @@ export function assignCase(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "PATCH /case/:uid/, uid is required",
+          "POST /case/:uid/assign, uid is required",
           null
         )
       );
@@ -252,7 +177,7 @@ export function assignCase(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "body.assignee is required (uuid of kiosk manager)",
+          "body.assignee is required (uuid of volunteer)",
           req.body
         )
       );
@@ -270,25 +195,25 @@ export function assignCase(): RequestHandler {
         })
       );
     } else if (caseDoc.status !== CASE_STATUS_OPEN) {
-      // Do not allow changing of status if it's not open
+      // Do not allow changing of assignee if it's not open
       return next(
         new CustomError(HTTP_BAD_REQUEST, "Case is not open.", {
           status: caseDoc.status,
         })
       );
     } else {
-      // Case is in valid state, search for kiosk manager.
-      const kioskManagerDoc = await KioskManager.findOne({
+      // Case is in valid state, search for volunteer.
+      const volunteerDoc = await KioskManager.findOne({
         uid: req.body.assignee,
       }).exec();
 
-      if (!kioskManagerDoc) {
+      if (!volunteerDoc) {
         return next(
-          new CustomError(HTTP_NOT_FOUND, "Kiosk manager does not exist.", null)
+          new CustomError(HTTP_NOT_FOUND, "volunteer does not exist.", null)
         );
       } else {
-        // Kiosk manager exists, insert UUID and update case status.
-        caseDoc.assignee = kioskManagerDoc.uid;
+        // volunteer exists, insert UUID and update case status.
+        caseDoc.assignee = volunteerDoc.uid;
         caseDoc.status = CASE_STATUS_PROCESSING;
         await caseDoc.save();
         return res.send(apiResponse(HTTP_OK, "Case is assigned.", null));
@@ -308,22 +233,20 @@ export function closeCase(): RequestHandler {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "PATCH /case/:uid/, uid is required",
+          "POST /case/:uid/, uid is required",
           null
         )
       );
     } else {
       // Update
-      if (!updateStatus || isFinalState(req.query.status)) {
+      if (updateStatus == null || !isFinalState(updateStatus)) {
         return next(
           new CustomError(
             HTTP_BAD_REQUEST,
-            `closing status and can only be [
-              ${CASE_STATUS_CLOSED}|
-              ${CASE_STATUS_PROCESSING}|
-              ${CASE_CATEGORY_MINISTER}|
-              ${CASE_CATEGORY_WELFARE}
-            ].`,
+            `closing status and can only be [` +
+              `${CASE_STATUS_CLOSED}|` +
+              `${CASE_STATUS_COMPLETED}` +
+              `].`,
             req.body
           )
         );
@@ -353,6 +276,71 @@ export function closeCase(): RequestHandler {
           })
         );
       }
+    }
+  });
+}
+
+/**
+ * Categorize a case, if it's not in one of the final states.
+ */
+export function categorizeCase(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    // Validate data
+    if (!req.params.uid) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "POST /case/:uid/categorize, uid is required",
+          null
+        )
+      );
+    } else if (!req.body.category) {
+      return next(
+        new CustomError(HTTP_BAD_REQUEST, "body.category is required", req.body)
+      );
+    } else if (!isCategory(req.body.category)) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          `category can only be [` +
+            `${CASE_CATEGORY_NORMAL}|` +
+            `${CASE_CATEGORY_WELFARE}|` +
+            `${CASE_CATEGORY_MINISTER}` +
+            `].`,
+          null
+        )
+      );
+    }
+
+    // Search for case
+    const caseDoc = await Case.findOne({
+      uid: req.params.uid,
+    }).exec();
+
+    if (!caseDoc) {
+      return next(
+        new CustomError(HTTP_NOT_FOUND, "Case not found", {
+          uid: req.params.uid,
+        })
+      );
+    } else if (isFinalState(caseDoc.status)) {
+      // Do not allow changing of status if it's not open or processing
+      return next(
+        new CustomError(HTTP_BAD_REQUEST, `Case is ${caseDoc.status}.`, {
+          status: caseDoc.status,
+        })
+      );
+    } else {
+      // Case is in valid state, update category.
+      caseDoc.category = req.body.category;
+      await caseDoc.save();
+      return res.send(
+        apiResponse(
+          HTTP_OK,
+          `Case is categorized as ${req.body.category}.`,
+          null
+        )
+      );
     }
   });
 }

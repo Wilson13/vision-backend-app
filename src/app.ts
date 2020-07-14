@@ -87,7 +87,7 @@ app.use(function (err, req, res, next) {
   res.status(errorStatus);
   //res.render('error');
 
-  res.json(errorResponse(errorStatus, err.message, err.data));
+  res.send(errorResponse(errorStatus, err.message, err.data));
 });
 
 export default app;
