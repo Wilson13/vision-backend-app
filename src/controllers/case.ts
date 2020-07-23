@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { isNullOrUndefined } from "util";
 
 import Case from "../models/case";
 import KioskManager from "../models/kiosk_manager";
@@ -35,7 +34,7 @@ export async function findUserByPhone(
     number: userPhone.number,
   });
 
-  if (isNullOrUndefined(phoneDoc)) return null;
+  if (!phoneDoc) return null;
 
   return User.findOne({ phone: phoneDoc._id });
 }

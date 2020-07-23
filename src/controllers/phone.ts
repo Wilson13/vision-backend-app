@@ -8,12 +8,11 @@ import {
   ERROR_MSG_PHONE_COUNTRY,
   ERROR_MSG_PHONE_NUMBER,
 } from "../utils/constants";
-import { isNullOrUndefined } from "util";
 
 const countryCodeRegex = /^\d{2}$/;
 const phoneNumberRegex = /^\d{8}$/;
 export function validatePhoneFormat(phone): string {
-  if (!isNullOrUndefined(phone)) {
+  if (phone) {
     if (!countryCodeRegex.test(phone.countryCode))
       return ERROR_MSG_PHONE_COUNTRY;
     else if (!phoneNumberRegex.test(phone.number))
@@ -37,8 +36,7 @@ export function validatePhone(phone: PhoneInterface): CustomError {
     return new CustomError(HTTP_BAD_REQUEST, "Phone is required", null);
 
   const phoneValStr = validatePhoneFormat(phone);
-  if (!isNullOrUndefined(phoneValStr))
-    return new CustomError(HTTP_BAD_REQUEST, phoneValStr, null);
+  if (phoneValStr) return new CustomError(HTTP_BAD_REQUEST, phoneValStr, null);
   else return null;
 }
 

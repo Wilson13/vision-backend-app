@@ -1,7 +1,6 @@
 import { RequestHandler } from "express";
 import { Error } from "mongoose";
 import validator from "validator";
-import { isNullOrUndefined } from "util";
 import AWS from "aws-sdk";
 import path from "path";
 
@@ -47,7 +46,8 @@ import {
   CASE_STATUS_CLOSED,
 } from "../utils/constants";
 
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const dateRegex = /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)$/;
+///^\d{4}-\d{2}-\d{2}$/;
 const postalRegex = /^\d{6}$/;
 
 export async function findUserByPhone(
@@ -59,7 +59,7 @@ export async function findUserByPhone(
     number: userPhone.number,
   });
 
-  if (isNullOrUndefined(phoneDoc)) return null;
+  if (!phoneDoc) return null;
 
   return User.findOne({ phone: phoneDoc._id });
 }
@@ -129,30 +129,26 @@ function validateUserDataFormat(userData): string {
   const noOfChildrenRegex = /^\d+$/;
 
   // Check name
-  if (
-    !isNullOrUndefined(userData.name) &&
-    !validator.isLength(userData.name, { max: 50 })
-  )
+  if (userData.name && !validator.isLength(userData.name, { max: 50 }))
     return ERROR_MSG_NAME;
   // Check email
-  if (!isNullOrUndefined(userData.email) && !validator.isEmail(userData.email))
+  if (userData.email && !validator.isEmail(userData.email))
     return ERROR_MSG_EMAIL;
   // FIXME: CHECK DOB
   // Check race
-  else if (!isNullOrUndefined(userData.race) && !validateRace(userData.race))
-    return ERROR_MSG_RACE;
+  else if (userData.race && !validateRace(userData.race)) return ERROR_MSG_RACE;
   // Check gender
-  else if (!isNullOrUndefined(userData.gender) && validateGender(userData.race))
+  else if (userData.gender && validateGender(userData.race))
     return ERROR_MSG_GENDER;
   // Check language
   else if (
-    !isNullOrUndefined(userData.language) &&
+    userData.language &&
     !validator.isLength(userData.language, { max: 50 })
   )
     return ERROR_MSG_LANGUAGE;
   // Check noOfChildren
   else if (
-    !isNullOrUndefined(userData.noOfChildren) &&
+    userData.noOfChildren &&
     (!noOfChildrenRegex.test(userData.noOfChildren) ||
       userData.noOfChildren > 20)
   ) {
@@ -164,22 +160,22 @@ function validateUserDataFormat(userData): string {
   }
   // Check maritalStatus
   else if (
-    !isNullOrUndefined(userData.maritalStatus) &&
+    userData.maritalStatus &&
     !validateMaritalStatus(userData.maritalStatus)
   )
     return ERROR_MSG_MARITAL_STATUS;
   // Check occupation
   else if (
-    !isNullOrUndefined(userData.occupation) &&
+    userData.occupation &&
     !validator.isLength(userData.occupation, { max: 50 })
   )
     return ERROR_MSG_OCCUPATION;
   // Check phone
   // TODO: Don't allow phone update for now, also, each case is attached with it's own contact no.
   // else if (
-  //   !isNullOrUndefined(userData.phone)
+  //   (userData.phone)
   //   // &&
-  //   // !isNullOrUndefined(validatePhoneFormat(userData.phone))
+  //   // (validatePhoneFormat(userData.phone))
   // ) {
   //   return ERROR_MSG_PHONE_UPDATE;
   // }
@@ -188,37 +184,31 @@ function validateUserDataFormat(userData): string {
   }
   // return validatePhoneFormat(userData.phone);
   // Check postalCode
-  else if (
-    !isNullOrUndefined(userData.postalCode) &&
-    !postalRegex.test(userData.postalCode)
-  )
+  else if (userData.postalCode && !postalRegex.test(userData.postalCode))
     return ERROR_MSG_POSTAL;
   // Check blockHseNo
   else if (
-    !isNullOrUndefined(userData.blockHseNo) &&
+    userData.blockHseNo &&
     !validator.isLength(userData.blockHseNo, { max: 50 })
   )
     return ERROR_MSG_BLOCK_HOUSE_NO;
   // Check floorNo
   else if (
-    !isNullOrUndefined(userData.floorNo) &&
+    userData.floorNo &&
     !validator.isLength(userData.blockHseNo, { max: 20 })
   )
     return ERROR_MSG_FLOOR_NO;
   // Check unitNo
-  else if (
-    !isNullOrUndefined(userData.unitNo) &&
-    !validator.isLength(userData.unitNo, { max: 10 })
-  )
+  else if (userData.unitNo && !validator.isLength(userData.unitNo, { max: 10 }))
     return ERROR_MSG_UNIT_NO;
   // Check address
   else if (
-    !isNullOrUndefined(userData.address) &&
+    userData.address &&
     !validator.isLength(userData.address, { max: 50 })
   )
     return ERROR_MSG_ADDRESS;
   else if (
-    !isNullOrUndefined(userData.flatType) &&
+    userData.flatType &&
     !validator.isLength(userData.flatType, { max: 20 })
   )
     return ERROR_MSG_FLAT_TYPE;
@@ -228,14 +218,13 @@ function validateUserDataFormat(userData): string {
 // Only one extra check is required when updating user, NRIC cannnot be changed.
 function validatePatchUser(patchUser): string {
   // Check NRIC
-  if (!isNullOrUndefined(patchUser.nric))
-    return "nric is not allowed to change";
+  if (patchUser.nric) return "nric is not allowed to change";
   else if (
-    !isNullOrUndefined(patchUser.otp) ||
-    !isNullOrUndefined(patchUser.accessToken) ||
-    !isNullOrUndefined(patchUser.verificationCode) ||
-    !isNullOrUndefined(patchUser.authServer) ||
-    !isNullOrUndefined(patchUser.uid)
+    patchUser.otp ||
+    patchUser.accessToken ||
+    patchUser.verificationCode ||
+    patchUser.authServer ||
+    patchUser.uid
   )
     return ERROR_UPDATE_FIELD;
   else return validateUserDataFormat(patchUser);
@@ -320,7 +309,7 @@ export function getUsers(): RequestHandler {
 //     }
 
 //     const patchUserValStr = validateUserDataFormat(req.body);
-//     if (!isNullOrUndefined(patchUserValStr)) {
+//     if ((patchUserValStr)) {
 //       return next(new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body));
 //     }
 
@@ -376,7 +365,7 @@ export function updateUser(): RequestHandler {
         const patchUserValStr = validatePatchUser(req.body);
 
         // If there's problem with patch user data provided
-        if (!isNullOrUndefined(patchUserValStr))
+        if (patchUserValStr)
           return next(
             new CustomError(HTTP_BAD_REQUEST, patchUserValStr, req.body)
           );
@@ -554,7 +543,7 @@ export function getUserPhoto(): RequestHandler {
         } catch (err) {
           let errMsg;
           let statusCode = HTTP_BAD_REQUEST;
-          if (!(isNullOrUndefined(err?.code) && err.code == "NotFound")) {
+          if (!(!err?.code && err.code == "NotFound")) {
             errMsg = "No image found for user";
             statusCode = HTTP_NOT_FOUND;
           } else {
@@ -637,13 +626,12 @@ export function createCase(): RequestHandler {
       !req.body.description ||
       !req.body.language ||
       !req.body.location ||
-      !req.body.date ||
       !req.body.refId
     ) {
       return next(
         new CustomError(
           HTTP_BAD_REQUEST,
-          "subject, description, language, location, date, refId is required.",
+          "subject, description, language, location, refId is required.",
           req.body
         )
       );
@@ -671,15 +659,18 @@ export function createCase(): RequestHandler {
           req.body
         )
       );
-    } else if (!dateRegex.test(req.body.date)) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "Please send date in ISO 8601 format (yyyy-MM-dd).",
-          req.body
-        )
-      );
-    } else if (!isNullOrUndefined(req.body.whatsappCall)) {
+    }
+    // Not required for front end to input date anymore, just use createdAt.
+    // else if (!dateRegex.test(req.body.date)) {
+    //   return next(
+    //     new CustomError(
+    //       HTTP_BAD_REQUEST,
+    //       "Please send date in ISO 8601 format (yyyy-MM-ddThh:mm:ss[TZD]).",
+    //       req.body
+    //     )
+    //   );
+    // }
+    else if (!req.body.whatsappCall) {
       // Validate whatsappCall
       if (!validator.isBoolean(req.body.whatsappCall)) {
         return next(
@@ -693,10 +684,33 @@ export function createCase(): RequestHandler {
         const tempVal = req.body.whatsappCall;
         req.body.whatsappCall = tempVal == "true" ? true : false;
       }
+    } else if (req.files.length > 3) {
+      return next(
+        new CustomError(
+          HTTP_BAD_REQUEST,
+          "Only 3 attachments is allowed",
+          req.body
+        )
+      );
     }
+
+    if (req.files.length > 3) {
+      // return next(
+      //   new CustomError(
+      //     HTTP_BAD_REQUEST,
+      //     "Only 3 attachments is allowed",
+      //     req.body
+      //   )
+      // );
+      console.log("More than 3 second!!!");
+    }
+
+    console.log(req.files.length);
+
     if (req.params?.uid == null) {
       return next(new Error("POST /users/:uid/cases, 'uid' is required"));
     } else {
+      // Valid userId and body, create case and allow up to 3 files to be uploaded.
       const userId = req.params.uid;
       const userDoc = await User.findOne({ uid: userId }).exec();
 
@@ -717,16 +731,15 @@ export function createCase(): RequestHandler {
         language,
       } = req.body;
 
-      // Add time portion to date as user is
-      // only required to provide date.
-      const currentTime = new Date().toISOString();
-      const todayDate = Date.parse(
-        req.body.date + "T" + currentTime.split("T")[1]
-      );
-
+      // Not required for front end to input date anymore, just use createdAt.
+      // Add time portion to date as user is only required to provide date.
+      // (user is now required to input the full datetime)
+      // const currentTime = new Date().toISOString();
+      // const caseCreationDate = Date.parse(req.body.date);
+      //+ "T" + currentTime.split("T")[1]
       // Datetime range for today
-      const start = new Date(todayDate);
-      const end = new Date(todayDate);
+      const start = new Date(Date.now()); //new Date(caseCreationDate);
+      const end = new Date(Date.now());
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
 
@@ -783,11 +796,53 @@ export function createCase(): RequestHandler {
         location: location,
         queueNo: newQueueNo,
         whatsappCall: whatsappCall,
-        createdAt: todayDate,
       });
 
-      const savedCase = await newCase.save();
-      return res.send(apiResponse(HTTP_OK, "New case created.", savedCase));
+      // const savedCase = await newCase.save();
+
+      // Get files and upload into s3 bucket
+      for (let i = 0; i < req.files.length; i++) {
+        console.log("name: " + req.files[i].originalname);
+      }
+
+      // Upload attachments
+      // try {
+      //   AWS.config.update({
+      //     accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+      //     secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+      //     region: process.env.APP_AWS_REGION,
+      //   });
+      //   // Create S3 service object
+      //   const s3 = new AWS.S3({
+      //     apiVersion: "2006-03-01",
+      //     httpOptions: { timeout: 3000 },
+      //   });
+
+      //   // Bucket name
+      //   const bucketName = process.env.AWS_BUCKET_NAME;
+      //   // Use user's uid as the key plus the extension type of the original file
+      //   const photoKey = userId + savedCase.uid;
+
+      //   const params = {
+      //     Bucket: bucketName,
+      //     Key: photoKey,
+      //     Body: req.file.buffer,
+      //     // ACL: "public-read",
+      //   };
+
+      //   await s3.upload(params).promise();
+      // } catch (err) {
+      //   return next(
+      //     new CustomError(
+      //       HTTP_BAD_REQUEST,
+      //       "There was an error uploading the photo.",
+      //       // { err: err }
+      //       null
+      //     )
+      //   );
+      // }
+
+      return res.send(apiResponse(HTTP_OK, "New case created.", null)); //savedCase));
     }
   });
 }

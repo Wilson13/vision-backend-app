@@ -2,7 +2,6 @@ import createHttpError from "http-errors";
 import { RequestHandler } from "express";
 import { Error } from "mongoose";
 import validator from "validator";
-import { isNullOrUndefined } from "util";
 import Axios from "axios";
 
 import KioskManager, { KioskManagerInterface } from "../models/kiosk_manager";
@@ -60,7 +59,7 @@ export async function findKioskManagerByPhone(
     number: kioskPhone.number,
   });
 
-  if (isNullOrUndefined(kioskPhoneDoc)) return null;
+  if (!kioskPhoneDoc) return null;
 
   return KioskManager.findOne({ kioskPhone: kioskPhoneDoc._id });
 }
@@ -174,9 +173,7 @@ export function authorizeKioskManager(): RequestHandler {
         })
       );
     } catch (err) {
-      const returnData = isNullOrUndefined(err.response?.data)
-        ? err.message
-        : err.response.data;
+      const returnData = !err.response?.data ? err.message : err.response.data;
 
       const errorStatus = err.response?.status;
       return next(
@@ -280,9 +277,7 @@ export function sendOTP(): RequestHandler {
       // OTP successfully requested
       return res.send(apiResponse(HTTP_OK, "OTP sent.", null));
     } catch (err) {
-      let returnData = isNullOrUndefined(err.response?.data)
-        ? err.message
-        : err.response.data;
+      let returnData = !err.response?.data ? err.message : err.response.data;
 
       // If OTP exist, ask user to wait for
       // 2 min before requesting for a new one.

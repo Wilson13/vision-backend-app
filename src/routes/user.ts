@@ -17,7 +17,11 @@ router.post("/", userController.createUser());
 router.post("/search", userController.searchUser());
 
 /* Create new user case */
-router.post("/:uid/cases", userController.createCase());
+router.post(
+  "/:uid/cases",
+  upload.array("attachments"),
+  userController.createCase()
+);
 
 /* Upload user's photo */
 router.post(

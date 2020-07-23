@@ -1,7 +1,6 @@
 import createHttpError from "http-errors";
 import axios from "axios";
 import { RequestHandler } from "express";
-import { isNullOrUndefined } from "util";
 
 // import Config from "../models/config";
 import KioskManager from "../models/kiosk_manager";
@@ -27,7 +26,7 @@ export async function findTokenByPhone(
     number: kioskPhone.number,
   });
 
-  if (isNullOrUndefined(kioskPhoneDoc)) return null;
+  if (!kioskPhoneDoc) return null;
 
   return Token.findOne({ kioskPhone: kioskPhoneDoc._id });
 }
@@ -98,7 +97,7 @@ export function receiveVerificationCode(): RequestHandler {
         number: phone.number,
       });
 
-      if (isNullOrUndefined(kioskPhoneDoc))
+      if (!kioskPhoneDoc)
         return next(
           new CustomError(
             HTTP_INTERNAL_SERVER_ERROR,
@@ -159,7 +158,7 @@ export function receiveVerificationCode(): RequestHandler {
           )
         );
       } else {
-        const returnData = isNullOrUndefined(err.response?.data)
+        const returnData = !err.response?.data
           ? err.message
           : err.response.data;
 

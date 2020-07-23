@@ -10,10 +10,12 @@
             "request": "launch",
             // "cwd": "${workspaceFolder}",
             // "envFile": "${workspaceFolder}/.env",
-            "env": {
+            // "env": {
             //   "NODE_ENV": "dev",
             //   "SLS_DEBUG": "*"   
-            },
+            // },
+            // For package.json
+            // "offline": "tsc && node --inspect-brk=5858 ./node_modules/.bin/serverless offline -s dev",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run-script",
