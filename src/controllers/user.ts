@@ -45,6 +45,8 @@ import {
   GET_LIMIT,
   CASE_STATUS_CLOSED,
 } from "../utils/constants";
+import { ExceptionHandler } from "winston";
+import { exception } from "console";
 
 const dateRegex = /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)$/;
 ///^\d{4}-\d{2}-\d{2}$/;
@@ -694,19 +696,6 @@ export function createCase(): RequestHandler {
       );
     }
 
-    if (req.files.length > 3) {
-      // return next(
-      //   new CustomError(
-      //     HTTP_BAD_REQUEST,
-      //     "Only 3 attachments is allowed",
-      //     req.body
-      //   )
-      // );
-      console.log("More than 3 second!!!");
-    }
-
-    console.log(req.files.length);
-
     if (req.params?.uid == null) {
       return next(new Error("POST /users/:uid/cases, 'uid' is required"));
     } else {
@@ -798,51 +787,52 @@ export function createCase(): RequestHandler {
         whatsappCall: whatsappCall,
       });
 
-      // const savedCase = await newCase.save();
+      const savedCase = await newCase.save();
 
       // Get files and upload into s3 bucket
-      for (let i = 0; i < req.files.length; i++) {
-        console.log("name: " + req.files[i].originalname);
+      try {
+        AWS.config.update({
+          accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+          region: process.env.APP_AWS_REGION,
+        });
+        // Create S3 service object
+        const s3 = new AWS.S3({
+          apiVersion: "2006-03-01",
+          httpOptions: { timeout: 3000 },
+        });
+
+        // Bucket name
+        const bucketName = process.env.AWS_BUCKET_NAME;
+
+        let i = 0;
+        // Requires to use await at top level to catch rejections (errors)
+        // thrown inside the map function due to scoping/closure issue
+        await Promise.all(
+          req.files.map(async (file) => {
+            // console.log(file.originalname);
+            // Use user's uid as the key plus the extension type of the original file
+            const fileExt = path.extname(file.originalname);
+            const photoKey = savedCase.uid + "_" + i++ + fileExt; //+ savedCase.uid;
+            const params = {
+              Bucket: bucketName,
+              Key: photoKey,
+              Body: file.buffer,
+              // ACL: "public-read",
+            };
+            await s3.upload(params).promise();
+          })
+        );
+      } catch (err) {
+        let errMsg = "Error occured while creating a new case.";
+        if (err.statusCode == 403)
+          errMsg =
+            "Case created. There was an error uploading the attachments." +
+            err.message;
+        return next(new CustomError(HTTP_BAD_REQUEST, errMsg, null));
       }
 
-      // Upload attachments
-      // try {
-      //   AWS.config.update({
-      //     accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
-      //     secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
-      //     region: process.env.APP_AWS_REGION,
-      //   });
-      //   // Create S3 service object
-      //   const s3 = new AWS.S3({
-      //     apiVersion: "2006-03-01",
-      //     httpOptions: { timeout: 3000 },
-      //   });
-
-      //   // Bucket name
-      //   const bucketName = process.env.AWS_BUCKET_NAME;
-      //   // Use user's uid as the key plus the extension type of the original file
-      //   const photoKey = userId + savedCase.uid;
-
-      //   const params = {
-      //     Bucket: bucketName,
-      //     Key: photoKey,
-      //     Body: req.file.buffer,
-      //     // ACL: "public-read",
-      //   };
-
-      //   await s3.upload(params).promise();
-      // } catch (err) {
-      //   return next(
-      //     new CustomError(
-      //       HTTP_BAD_REQUEST,
-      //       "There was an error uploading the photo.",
-      //       // { err: err }
-      //       null
-      //     )
-      //   );
-      // }
-
-      return res.send(apiResponse(HTTP_OK, "New case created.", null)); //savedCase));
+      return res.send(apiResponse(HTTP_OK, "New case created.", savedCase));
     }
   });
 }

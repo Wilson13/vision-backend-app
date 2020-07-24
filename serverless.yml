@@ -18,15 +18,14 @@ provider:
     AUTH_REDIRECT_URI: https://api.queue.freshturfengineering.com/webhook/login
     AUTH_API_TOKEN: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZlbG9wZXJJZCI6IndpbHNvbiJ9.flzTtU3ingYjT3AOBOGFxUqEPx2D_vAVutxwzFYqPK1I4gySKwQf52SHmOCbwKRbdaU0XbrRLlZtXFnhM6THYg
     AUTH_DEVELOPER_ID: wilson
-    AWS_BUCKET_NAME: meet-queue-user
+    AWS_BUCKET_NAME: mps-attachments
     APP_AWS_REGION: ap-southeast-1
     AWS_SIGNED_URL_EXPIRES: "900"
     # "VjM4eTR0YUZXc0JHZG1vQg=="
-    
     # "QUtJQVZQS1pDUjdYNk1KQVlQSkw="
-    APP_AWS_ACCESS_KEY_ID: AKIAVPKZCR7X6MJAYPJL
+    APP_AWS_ACCESS_KEY_ID: AKIA2HOUYCOGY34FCYIL
     # "eDJQT25RVFo0aVZGMFEyTUpqazlvZjdCd1ZScTNEb2p0RHVrNWZ0Mg=="
-    APP_AWS_SECRET_ACCESS_KEY: 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
+    APP_AWS_SECRET_ACCESS_KEY: C7fQP67nsHWF8C2WydX+DHKvomLMPSOE17bVu0Xe
 package:
   exclude:
     - src/**
