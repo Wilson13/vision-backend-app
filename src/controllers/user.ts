@@ -618,6 +618,10 @@ export function searchUser(): RequestHandler {
 /**
  * Create a new case that reference the user (this is the only case-related API that is a subset of user route).
  * If there is an existing case, user is not allowed to create a new one.
+ * 
+ * if (!some_variable) {
+  // some_variable is either null, undefined, 0, NaN, false, or an empty string
+}
  * */
 export function createCase(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
@@ -670,7 +674,7 @@ export function createCase(): RequestHandler {
     //     )
     //   );
     // }
-    else if (!req.body.whatsappCall) {
+    else if (req.body.whatsappCall) {
       // Validate whatsappCall
       if (!validator.isBoolean(req.body.whatsappCall)) {
         return next(
