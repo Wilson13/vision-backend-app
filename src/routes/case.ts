@@ -5,6 +5,9 @@ const router = express.Router();
 /* GET cases listing from database. */
 router.get("/", caseController.getCases());
 
+/* GET cases attachment from database. */
+router.get("/:uid/attachments", caseController.getCasesAttachments());
+
 /* Assign case to a kiosk manager */
 router.post("/:uid/assign", caseController.assignCase());
 

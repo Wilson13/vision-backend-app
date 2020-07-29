@@ -2,6 +2,9 @@ service: meet-queue-backend
 provider:
   name: aws
   runtime: nodejs12.x
+  apiGateway:
+    binaryMediaTypes:
+      - 'multipart/form-data'
   stage: dev
   region: ap-southeast-1
   memorySize: 128
@@ -48,6 +51,19 @@ functions:
                 status: false
                 location: false
                 sort: false
+  getCase:
+    handler: dist/bin/www.handler
+    events: 
+      - http: 
+          path: /cases/{uid}/attachments
+          method: GET
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
+          cors: true
+          request:
+            parameters:
+              paths:
+                uid: true
   assignCase:
     handler: dist/bin/www.handler
     events: 

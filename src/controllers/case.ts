@@ -24,6 +24,8 @@ import {
   CASE_STATUS_COMPLETED,
   CASE_CATEGORY_NORMAL,
 } from "../utils/constants";
+import AWS from "aws-sdk";
+import { link } from "fs";
 
 export async function findUserByPhone(
   userPhone: PhoneInterface
@@ -340,6 +342,76 @@ export function categorizeCase(): RequestHandler {
           null
         )
       );
+    }
+  });
+}
+
+/**
+ * Retrieve a list of attachments belonging to this particular case.
+ */
+export function getCasesAttachments(): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    if (req.params?.uid == null) {
+      return next(new Error("GET /cases/:uid, 'uid' is required"));
+    } else {
+      const links = [];
+      const caseId = req.params.uid;
+      const caseDoc = await Case.findOne({ uid: caseId }).exec();
+
+      // Check if case exists
+      if (!caseDoc) {
+        return next(
+          new CustomError(HTTP_NOT_FOUND, "Case not found.", {
+            uid: caseId,
+          })
+        );
+      }
+
+      // Get files from s3 bucket
+      try {
+        AWS.config.update({
+          accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+          region: process.env.APP_AWS_REGION,
+        });
+        // Create S3 service object
+        const s3 = new AWS.S3({
+          apiVersion: "2006-03-01",
+          httpOptions: { timeout: 3000 },
+        });
+
+        // Bucket name
+        const bucketName = process.env.AWS_BUCKET_NAME;
+
+        for (let i = 0; i < 3; i++) {
+          // Attachments' names are case uuid + [0-2] .
+          const file = caseId + "_" + i;
+          const params = {
+            Bucket: bucketName,
+            Key: file,
+          };
+          try {
+            await s3.headObject(params).promise();
+            // If no error is thrown for headObject, it means
+            // file exists and link can be obtained safely.
+            const link = await s3.getSignedUrlPromise("getObject", params);
+            links.push(link);
+            // files.push(file);
+          } catch (err) {
+            // File not found, ignored.
+          }
+        }
+      } catch (err) {
+        return next(
+          new CustomError(
+            HTTP_BAD_REQUEST,
+            "Error occured while retreiving attachments.",
+            null
+          )
+        );
+      }
+
+      res.send(apiResponse(HTTP_OK, "Attachments retrieved.", links));
     }
   });
 }

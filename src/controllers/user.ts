@@ -45,10 +45,8 @@ import {
   GET_LIMIT,
   CASE_STATUS_CLOSED,
 } from "../utils/constants";
-import { ExceptionHandler } from "winston";
-import { exception } from "console";
 
-const dateRegex = /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)$/;
+//const dateRegex = /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)$/;
 ///^\d{4}-\d{2}-\d{2}$/;
 const postalRegex = /^\d{6}$/;
 
@@ -808,17 +806,15 @@ export function createCase(): RequestHandler {
         let i = 0;
         // Requires to use await at top level to catch rejections (errors)
         // thrown inside the map function due to scoping/closure issue
+        // s3 upload doesn't work properly in serverless offline mode.
         await Promise.all(
           req.files.map(async (file) => {
-            // console.log(file.originalname);
-            // Use user's uid as the key plus the extension type of the original file
-            const fileExt = path.extname(file.originalname);
-            const photoKey = savedCase.uid + "_" + i++ + fileExt; //+ savedCase.uid;
+            const photoKey = savedCase.uid + "_" + i++;
             const params = {
               Bucket: bucketName,
               Key: photoKey,
+              ContentType: file.mimetype,
               Body: file.buffer,
-              // ACL: "public-read",
             };
             await s3.upload(params).promise();
           })
