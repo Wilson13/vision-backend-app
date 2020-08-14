@@ -1,34 +1,25 @@
-service: meet-queue-backend
+service: stlog-sftp-read
 provider:
   name: aws
   runtime: nodejs12.x
   apiGateway:
     binaryMediaTypes:
-      - 'multipart/form-data'
+      - "multipart/form-data"
   stage: dev
   region: ap-southeast-1
   memorySize: 128
-  profile: serverless-admin
   timeout: 30
   environment:
-    NODE_ENV: production
-    DB_URI: mongodb+srv://cluster0-evfkc.mongodb.net/meetqueuedb
-    DB_PASSWORD: V38y4taFWsBGdmoB
-    DB_USER: meet-queue-db-admin
-    AUTH_AUTHORIZE_URI: https://staging.auth.freshturfengineering.com/oauth/authorize/
-    AUTH_VERIFY_URI: https://staging.auth.freshturfengineering.com/oauth/verify
-    AUTH_OTP_URI: https://staging.auth.freshturfengineering.com/oauth/otp
-    AUTH_REDIRECT_URI: https://api.queue.freshturfengineering.com/webhook/login
-    AUTH_API_TOKEN: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZlbG9wZXJJZCI6IndpbHNvbiJ9.flzTtU3ingYjT3AOBOGFxUqEPx2D_vAVutxwzFYqPK1I4gySKwQf52SHmOCbwKRbdaU0XbrRLlZtXFnhM6THYg
-    AUTH_DEVELOPER_ID: wilson
-    AWS_BUCKET_NAME: mps-attachments
-    APP_AWS_REGION: ap-southeast-1
+    NODE_ENV: dev
     AWS_SIGNED_URL_EXPIRES: "900"
-    # "VjM4eTR0YUZXc0JHZG1vQg=="
-    # "QUtJQVZQS1pDUjdYNk1KQVlQSkw="
-    APP_AWS_ACCESS_KEY_ID: AKIA2HOUYCOGY34FCYIL
-    # "eDJQT25RVFo0aVZGMFEyTUpqazlvZjdCd1ZScTNEb2p0RHVrNWZ0Mg=="
-    APP_AWS_SECRET_ACCESS_KEY: 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
+    AWS_ACCESS_KEY_ID: AKIAVPKZCR7XR5ORZ364
+    AWS_SECRET_ACCESS_KEY: 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
+    AWS_REGION: ap-southeast-1
+    AWS_S3_BUCKET_NAME: stlog-sftp
+    AWS_S3_PREFIX_DOWNLOADED: Inbound/Downloaded/
+    # max number of object keys to be returned
+    AWS_S3_MAX_KEYS: 100
+    AWS_DYNAMO_DB_TABLE_PROCESSED: sftp-processed
 package:
   exclude:
     - src/**
@@ -36,122 +27,17 @@ package:
 plugins:
   - serverless-offline
 functions:
-  getCases:
+  showIP:
     handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /cases
+    events:
+      - http:
+          path: /sftp/showIP
           method: GET
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
-          request:
-            parameters:
-              querystrings:
-                status: false
-                location: false
-                sort: false
-  getCase:
+  checkNewFile:
     handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /cases/{uid}/attachments
+    events:
+      - http:
+          path: /sftp/checkNewFile
           method: GET
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
           cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-  assignCase:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /cases/{uid}/assign
-          method: POST
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-  closeCase:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /cases/{uid}/close
-          method: POST
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-  categorizeCase:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /cases/{uid}/categorize
-          method: POST
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-  createUser:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /users
-          method: POST
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-  listUser:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /users
-          method: GET
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-  getUserCases:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /users/{uid}/cases
-          method: GET
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-              querystrings:
-                status: false
-                location: false
-                sort: false
-  createCase:
-    handler: dist/bin/www.handler
-    events: 
-      - http: 
-          path: /users/{uid}/cases
-          method: POST
-          authorizer:
-            arn: arn:aws:cognito-idp:ap-southeast-1:703210197901:userpool/ap-southeast-1_uUfW9Oi7e
-          cors: true
-          request:
-            parameters:
-              paths:
-                uid: true
-      # - http: 
-      #     path: /{proxy+}
-      #     method: ANY
-      #     cors: true

@@ -12,13 +12,7 @@ import helmet from "helmet"; // Secure Express app by setting various HTTP heade
 import errorResponse from "./utils/error_json";
 
 // import indexRouter from "./routes/index";
-import usersRouter from "./routes/user";
-import caseRouter from "./routes/case";
-// import kioskManagerRouter from "./routes/kiosk_manager";
-// import phonesRouter from "./routes/phone";
-// import kioskPhonesRouter from "./routes/kiosk_phone";
-// import webhookRouter from "./routes/webhook";
-// import faceRouter from "./routes/face";
+import sftpRouter from "./routes/sftp_pull";
 
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -32,17 +26,6 @@ if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
   // set up .env variables
   require("dotenv").config();
 }
-
-// Load env variables
-// loadEnv(__dirname + '/config/config.txt');
-
-// Set up DB connection
-require("./utils/database");
-
-// Seed DB if it's not in production or staging ENV
-// if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
-//   seedDB();
-// }
 
 const app = express();
 
@@ -58,13 +41,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
-// app.use("/", indexRouter);
-// app.use("/face", faceRouter);
-app.use("/users", usersRouter);
-app.use("/cases", caseRouter);
-// app.use("/phone", phonesRouter);
-// app.use("/kiosk/manager", kioskManagerRouter);
-// app.use("/kiosk/phone", kioskPhonesRouter);
+
+app.use("/sftp", sftpRouter);
 // app.use("/webhook", webhookRouter);
 app.use("/healthcheck", healthcheck());
 
