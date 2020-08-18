@@ -7,6 +7,7 @@ import * as path from "path";
 import logger from "morgan";
 import healthcheck from "express-healthcheck";
 import helmet from "helmet"; // Secure Express app by setting various HTTP headers.
+import dotenv from "dotenv";
 
 // import log from "./utils/logger";
 import errorResponse from "./utils/error_json";
@@ -24,7 +25,7 @@ import {
 const nodeEnv = process.env.NODE_ENV;
 if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
   // set up .env variables
-  require("dotenv").config();
+  dotenv.config();
 }
 
 const app = express();

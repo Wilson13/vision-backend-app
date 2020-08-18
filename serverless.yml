@@ -20,6 +20,9 @@ provider:
     # max number of object keys to be returned
     AWS_S3_MAX_KEYS: 100
     AWS_DYNAMO_DB_TABLE_PROCESSED: sftp-processed
+    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: error-notification-recipient
+    SEND_GRID_API_KEY_ID: mIqKKRrBSwy91PP_b8G3DQ
+    SEND_GRID_API_KEY_SECRET: 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
 package:
   exclude:
     - src/**
