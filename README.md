@@ -12,4 +12,5 @@ If yes, call next lambda to decrypt them.
 
 ## More
 
-No CI/CD was set up, depends on manual deployment for now.
+- No CI/CD was set up, depends on manual deployment for now.
+- AWS credential profile used: ats-developer
