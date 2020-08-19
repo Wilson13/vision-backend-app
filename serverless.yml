@@ -5,24 +5,29 @@ provider:
   apiGateway:
     binaryMediaTypes:
       - "multipart/form-data"
-  stage: dev
+  stage: ${opt:stage, 'dev'}
   region: ap-southeast-1
   memorySize: 128
   timeout: 30
   environment:
     NODE_ENV: dev
     AWS_SIGNED_URL_EXPIRES: "900"
-    AWS_ACCESS_KEY_ID: AKIAVPKZCR7XR5ORZ364
-    AWS_SECRET_ACCESS_KEY: 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
-    AWS_REGION: ap-southeast-1
-    AWS_S3_BUCKET_NAME: stlog-sftp
+    APP_AWS_REGION: ap-southeast-1
+    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-stlog-sftp
     AWS_S3_PREFIX_DOWNLOADED: Inbound/Downloaded/
     # max number of object keys to be returned
     AWS_S3_MAX_KEYS: 100
-    AWS_DYNAMO_DB_TABLE_PROCESSED: sftp-processed
-    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: error-notification-recipient
-    SEND_GRID_API_KEY_ID: mIqKKRrBSwy91PP_b8G3DQ
-    SEND_GRID_API_KEY_SECRET: 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
+    AWS_DYNAMO_DB_TABLE_PROCESSED: ${opt:stage, self:provider.stage, 'dev'}-sftp-processed
+    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'dev'}-error-notification-recipient
+    SEND_GRID_API_KEY_ID: ${ssm:/sftlog-sftp/SEND_GRID_API_KEY_ID}
+    # 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
+    SEND_GRID_API_KEY_SECRET: ${ssm:/sftlog-sftp/SEND_GRID_API_KEY_SECRET~true}
+    # These parameters store variables are referenced upon deployment.
+    # They can be referenced at runtime too to decouple deployment and configuration.
+    # AKIAVPKZCR7XR5ORZ364
+    APP_AWS_ACCESS_KEY_ID: ${ssm:/stlog-sftp/AWS_ACCESS_KEY_ID~true}
+    # YfpX2rNExVOKT7NAS7WId+CDJVKBfFS8DFLpFK8X
+    APP_AWS_SECRET_ACCESS_KEY: ${ssm:/sftlog-sftp/AWS_SECRET_ACCESS_KEY~true}
 package:
   exclude:
     - src/**
@@ -42,5 +47,5 @@ functions:
     events:
       - http:
           path: /sftp/checkNewFile
-          method: GET
+          method: POST
           cors: true

@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.get("/showIP", sftpPullController.showIP());
 
-router.get("/checkNewFile", sftpPullController.checkNewFile());
+router.post("/checkNewFile", sftpPullController.checkNewFile());
 
 export default router;

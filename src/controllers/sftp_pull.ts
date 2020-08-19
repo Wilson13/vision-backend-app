@@ -38,9 +38,9 @@ export function checkNewFile(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     try {
       AWS.config.update({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION,
+        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+        region: process.env.APP_AWS_REGION,
       });
 
       // Create S3 service object
