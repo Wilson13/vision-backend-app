@@ -5,7 +5,7 @@ provider:
   apiGateway:
     binaryMediaTypes:
       - "multipart/form-data"
-  stage: ${opt:stage, 'dev'}
+  stage: ${opt:stage, 'local'}
   region: ap-southeast-1
   memorySize: 128
   timeout: 30
@@ -14,8 +14,8 @@ provider:
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
     AWS_S3_MAX_KEYS: 100 # max number of object keys to be returned
-    AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'dev'}-balance
-    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'dev'}-error-notification-recipient
+    AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'local'}-balance
+    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'local'}-error-notification-recipient
     # These parameters store variables are referenced upon deployment.
     # They can be referenced at runtime too to decouple deployment and configuration.
     APP_AWS_ACCESS_KEY_ID: ${ssm:/stlog-sftp/AWS_ACCESS_KEY_ID~true}
@@ -29,7 +29,7 @@ package:
   exclude:
     - src/**
     - .env
-    - node_modules/serverless-offline/**
+    # - node_modules/serverless-offline/**
 plugins:
   - serverless-offline
 functions:

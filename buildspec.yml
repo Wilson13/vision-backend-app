@@ -8,6 +8,8 @@ phases:
   pre_build:
     commands:
       - echo install pre build commands
+      # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
+      - sls plugin uninstall --name serverless-offline
   build:
     commands:
       - echo deployment started `date`
