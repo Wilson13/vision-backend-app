@@ -1,5 +1,5 @@
 {
-  "name": "authentication-server",
+  "name": "stlog-notification-service",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -54,6 +54,7 @@
     "serverless": "^1.78.1",
     "serverless-http": "^2.5.0",
     "ssh2-sftp-client": "^5.2.2",
+    "twilio": "^3.49.1",
     "typescript": "^3.9.7",
     "update-notifier": "^4.1.0",
     "uuid": "^8.3.0",

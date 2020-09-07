@@ -13,7 +13,7 @@ import dotenv from "dotenv";
 import errorResponse from "./utils/error_json";
 
 // import indexRouter from "./routes/index";
-import sftpRouter from "./routes/sftp_pull";
+import notioficationRouter from "./routes/notification";
 
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -43,7 +43,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
 
-app.use("/sftp", sftpRouter);
+app.use("/notification", notioficationRouter);
 // app.use("/webhook", webhookRouter);
 app.use("/healthcheck", healthcheck());
 

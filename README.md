@@ -1,14 +1,12 @@
 ## Name
 
-Lambda Pull
+Stlog Notification Service
 
 ## Description
 
-This function pulls files from SFTP /outbound and checks if there's any new files.
+This service provides SMS and Email service to other microservices.
 
-If none, email error and upload error file.
-
-If yes, call next lambda to decrypt them.
+It has debit, credit, and logging built in to track consumption and top-ups.
 
 ## More
 
