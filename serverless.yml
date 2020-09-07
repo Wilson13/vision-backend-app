@@ -13,8 +13,6 @@ provider:
     NODE_ENV: dev
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
-    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-stlog-sftp
-    AWS_S3_PREFIX_DOWNLOADED: Inbound/Downloaded/
     AWS_S3_MAX_KEYS: 100 # max number of object keys to be returned
     AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'dev'}-balance
     AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'dev'}-error-notification-recipient
@@ -27,28 +25,13 @@ provider:
     TWILIO_AUTH_TOKEN: 19f26d80db424654aa3bec046c457136
     SEND_GRID_API_KEY_ID: ${ssm:/sftlog-sftp/SEND_GRID_API_KEY_ID}
     SEND_GRID_API_KEY_SECRET: ${ssm:/sftlog-sftp/SEND_GRID_API_KEY_SECRET~true}
-
 package:
   exclude:
     - src/**
     - .env
+    - node_modules/serverless-offline/**
 plugins:
   - serverless-offline
-# functions:
-#   showIP:
-#     handler: dist/bin/www.handler
-#     events:
-#       - http:
-#           path: /sftp/showIP
-#           method: GET
-#           cors: true
-#   checkNewFile:
-#     handler: dist/bin/www.handler
-#     events:
-#       - http:
-#           path: /sftp/checkNewFile
-#           method: POST
-#           cors: true
 functions:
   app:
     handler: dist/bin/www.handler
