@@ -14,23 +14,6 @@ import {
 } from "../utils/constants";
 
 /**
- * Function for getting current service environment's public IP.
- * Main objective is to ensure this lambda has a static IP.
- */
-export function showIP(): RequestHandler {
-  return asyncHandler(async (req, res) => {
-    const instance = axios.create({
-      baseURL: "https://ipv4bot.whatismyipaddress.com",
-      timeout: 12000,
-    });
-    instance.get("").then((resp) => {
-      // console.log(resp.data);
-      res.send(apiResponse(HTTP_OK, "Test ok.", resp.data));
-    });
-  });
-}
-
-/**
  * Send different types of notification using 3rd party service,
  * deducting credits from a specified project/company's account.
  */
