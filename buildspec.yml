@@ -14,7 +14,7 @@ phases:
     commands:
       - echo deployment started `date`
       - echo deploy serverless framework custom codebase
-      - NODE_ENV=production && tsc && sls deploy --stage dev
+      - npm run deploy
   post_build:
     commands:
       - echo post build completed on `date`

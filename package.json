@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "NODE_ENV=production && tsc && sls deploy",
+    "deploy": "NODE_ENV=production && tsc && sls deploy --stage dev",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "debug": "NODE_ENV=dev && ts-node src/bin/www.ts",
     "offline": "NODE_ENV=dev && tsc && cp -R src/views dist/ && sls offline",
