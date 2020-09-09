@@ -64,16 +64,16 @@ export function sendNotification(): RequestHandler {
       // Send notification based on type
       switch (req.body.type) {
         case "sms":
-          const twilioRes = await twilioClient.messages.create({
-            body: req.body.message,
-            to: req.body.to,
-            from: req.body.from,
-          });
+          // const twilioRes = await twilioClient.messages.create({
+          //   body: req.body.message,
+          //   to: req.body.to,
+          //   from: req.body.from,
+          // });
           // Deduct balance from account
           updateParams.UpdateExpression =
             "set sms_balance = sms_balance - :dec";
           updateParams.ExpressionAttributeValues = {
-            ":dec": Number(twilioRes.numSegments), // numSegments is a string
+            ":dec": 1, //Number(twilioRes.numSegments), // numSegments is a string
           };
           await docClient.update(updateParams).promise();
           break;
