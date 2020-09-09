@@ -9,6 +9,7 @@ provider:
   region: ap-southeast-1
   memorySize: 128
   timeout: 30
+
   environment:
     NODE_ENV: dev
     AWS_SIGNED_URL_EXPIRES: "900"
@@ -18,8 +19,8 @@ provider:
     AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'local'}-error-notification-recipient
     # These parameters store variables are referenced upon deployment.
     # They can be referenced at runtime too to decouple deployment and configuration.
-    APP_AWS_ACCESS_KEY_ID: ${ssm:/stlog-sftp/AWS_ACCESS_KEY_ID~true}
-    APP_AWS_SECRET_ACCESS_KEY: ${ssm:/sftlog-sftp/AWS_SECRET_ACCESS_KEY~true}
+    # APP_AWS_ACCESS_KEY_ID: ${ssm:/stlog-sftp/AWS_ACCESS_KEY_ID~true}
+    # APP_AWS_SECRET_ACCESS_KEY: ${ssm:/sftlog-sftp/AWS_SECRET_ACCESS_KEY~true}
     # Notification services
     TWILIO_ACCOUNT_SID: AC0daf3d9ca406d68a7370198fd0a6e384
     TWILIO_AUTH_TOKEN: 19f26d80db424654aa3bec046c457136
