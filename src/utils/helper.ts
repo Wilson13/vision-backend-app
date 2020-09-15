@@ -34,8 +34,8 @@ export function apiResponse(
 
 export class CustomError extends Error {
   status: number;
-  data: object;
-  constructor(status: number, message: string, data: object) {
+  data: Record<string, unknown>;
+  constructor(status: number, message: string, data: Record<string, unknown>) {
     super();
     this.status = status;
     this.message = message;
