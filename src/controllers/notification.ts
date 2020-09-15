@@ -1,17 +1,59 @@
 import { RequestHandler } from "express";
-import axios from "axios";
 import AWS from "aws-sdk";
 import sendGrid from "@sendgrid/mail";
 import twilio from "twilio";
+import { isEmpty } from "validate.js";
 
 import asyncHandler from "../utils/async_handler";
-import { apiResponse, CustomError } from "../utils/helper";
+import { CustomError } from "../utils/helper";
 import {
   HTTP_OK,
   HTTP_INTERNAL_SERVER_ERROR,
-  HTTP_NOT_FOUND,
   HTTP_BAD_REQUEST,
 } from "../utils/constants";
+import { body, ValidationChain } from "express-validator";
+
+/**
+ * Sanitizer middleware for notifications API
+ */
+export function sanitize(): ValidationChain[] {
+  return [
+    body("type").trim().escape(),
+    body("accountName").trim().escape(),
+    body("from").trim().escape(),
+    body("to").trim().escape(),
+    body("message").trim().escape(),
+  ];
+}
+
+/**
+ * Validator middleware for notifications API
+ */
+export function validate(): RequestHandler {
+  return (req, res, next) => {
+    let errorMsg: string;
+    const bodies = req.body;
+
+    // Validate parameters and fields
+    if (
+      isEmpty(bodies.type) ||
+      isEmpty(bodies.accountName) ||
+      isEmpty(bodies.from) ||
+      isEmpty(bodies.to) ||
+      isEmpty(bodies.message)
+    ) {
+      errorMsg = "'type', 'accountName', 'from', 'to', 'message' are required.";
+    }
+
+    if (!isEmpty(errorMsg)) {
+      // Pass error to next eror-handling middleware
+      return next(new CustomError(HTTP_BAD_REQUEST, errorMsg, null));
+    } else {
+      // Pass control to next middleware
+      return next();
+    }
+  };
+}
 
 /**
  * Send different types of notification using 3rd party service,
@@ -26,23 +68,6 @@ export function sendNotification(): RequestHandler {
       process.env.TWILIO_AUTH_TOKEN
     );
     const balanceTable = process.env.AWS_DYNAMO_DB_TABLE_BALANCE;
-
-    // Input validation
-    if (
-      !req.body.type ||
-      !req.body.accountName ||
-      !req.body.from ||
-      !req.body.to ||
-      !req.body.message
-    ) {
-      return next(
-        new CustomError(
-          HTTP_BAD_REQUEST,
-          "type, accountName, from, to, message are required.",
-          null
-        )
-      );
-    }
 
     try {
       // Setup AWS config before using AWS services
@@ -64,16 +89,20 @@ export function sendNotification(): RequestHandler {
       // Send notification based on type
       switch (req.body.type) {
         case "sms":
-          // const twilioRes = await twilioClient.messages.create({
-          //   body: req.body.message,
-          //   to: req.body.to,
-          //   from: req.body.from,
-          // });
+          let deductCredit = 0;
+          if (process.env.SMS_ENABLED) {
+            const twilioRes = await twilioClient.messages.create({
+              body: req.body.message,
+              to: req.body.to,
+              from: req.body.from,
+            });
+            deductCredit = Number(twilioRes.numSegments); // numSegments is a string
+          }
           // Deduct balance from account
           updateParams.UpdateExpression =
             "set sms_balance = sms_balance - :dec";
           updateParams.ExpressionAttributeValues = {
-            ":dec": 1, //Number(twilioRes.numSegments), // numSegments is a string
+            ":dec": deductCredit,
           };
           await docClient.update(updateParams).promise();
           break;

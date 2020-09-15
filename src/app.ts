@@ -13,7 +13,8 @@ import dotenv from "dotenv";
 import errorResponse from "./utils/error_json";
 
 // import indexRouter from "./routes/index";
-import notioficationRouter from "./routes/notification";
+import accountRouter from "./routes/account";
+import notificationRouter from "./routes/notification";
 
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -43,7 +44,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
 
-app.use("/notification", notioficationRouter);
+app.use("/accounts", accountRouter);
+app.use("/notifications", notificationRouter);
 // app.use("/webhook", webhookRouter);
 app.use("/healthcheck", healthcheck());
 
