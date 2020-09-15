@@ -7,12 +7,15 @@ provider:
   iamRoleStatements:
     - Effect: "Allow"
       Action:
-        - "dynamodb:Query"
-        - "dynamodb:Scan"
-        - "dynamodb:GetItem"
-        - "dynamodb:PutItem"
-        - "dynamodb:UpdateItem"
-        - "dynamodb:DeleteItem"
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_BALANCE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_SMS_TOPUPS}"
   runtime: nodejs12.x
   apiGateway:
     binaryMediaTypes:
