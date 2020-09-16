@@ -16,6 +16,7 @@ provider:
       Resource:
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_BALANCE}"
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_SMS_TOPUPS}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS}"
   runtime: nodejs12.x
   apiGateway:
     binaryMediaTypes:
@@ -32,7 +33,6 @@ provider:
     AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'dev'}-balance
     AWS_DYNAMO_DB_TABLE_SMS_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-sms-topups
     AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-email-topups
-    AWS_DYNAMO_DB_TABLE_ERROR_RECIPIENT: ${opt:stage, self:provider.stage, 'dev'}-error-notification-recipient
     SMS_ENABLED: false #Disable so sms is not actually sent but API call still works
     # Twilio
     TWILIO_ACCOUNT_SID: ${ssm:/sftlog-sftp/TWILIO_ACCOUNT_SID~true}
