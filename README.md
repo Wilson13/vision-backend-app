@@ -8,6 +8,12 @@ This service provides SMS and Email service to other microservices.
 
 It has debit, credit, and logging built in to track consumption and top-ups.
 
+## Account Usage Segregation
+
+On Twilio, SMS transactions are segregated using "Alphanumeric ID" as sender, hence both ATS and Emart sends SMS using the ame API credentials.
+
+On SendGrid, Email transactions are segregated using API keys.
+
 ## API
 
 Whenever 'accountName' is required, there's only two options now: emart or ats.
@@ -25,4 +31,3 @@ Whenever 'accountName' is required, there's only two options now: emart or ats.
 ## More
 
 - CI/CD is set up on AWS Code Pipeline.
-- AWS credential profile used: ats-developer

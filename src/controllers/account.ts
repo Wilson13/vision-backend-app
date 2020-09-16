@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
-import { isEmpty, isNumber } from "validate.js";
+import validator from "validator";
+import isEmpty from "validator/lib/isEmpty";
 import { body, ValidationChain } from "express-validator";
 import AWS from "aws-sdk";
 
@@ -9,9 +10,10 @@ import {
   HTTP_OK,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_BAD_REQUEST,
+  TYPE_SMS,
+  TYPE_EMAIL,
 } from "../utils/constants";
 
-const numReg = /^\d+$/;
 /**
  * Sanitizer middleware for notifications API
  */
@@ -19,7 +21,7 @@ export function sanitize(): ValidationChain[] {
   return [
     body("type").trim().escape(),
     body("paymentTotal").trim().escape(),
-    body("costPerSMS").trim().escape(),
+    body("costPerUnit").trim().escape(),
     body("topUpCredit").trim().escape(),
     body("paymentDate").trim().escape(),
   ];
@@ -31,7 +33,7 @@ export function sanitize(): ValidationChain[] {
  */
 export function validate(method: string): RequestHandler {
   return (req, res, next) => {
-    let errorMsg: string;
+    let errorMsg = "";
     const bodies = req.body;
     const params = req.params;
 
@@ -54,21 +56,21 @@ export function validate(method: string): RequestHandler {
         } else if (
           isEmpty(bodies.type) ||
           isEmpty(bodies.paymentTotal) ||
-          isEmpty(bodies.costPerSMS) ||
+          isEmpty(bodies.costPerUnit) ||
           isEmpty(bodies.topUpCredit) ||
           isEmpty(bodies.paymentDate)
         ) {
           errorMsg =
-            "Body fields 'type', 'paymentTotal', 'costPerSMS', 'topUpCredit', 'paymentDate' are required.";
-        } else if (bodies.type != "sms" && bodies.type != "email") {
+            "Body fields 'type', 'paymentTotal', 'costPerUnit', 'topUpCredit', 'paymentDate' are required.";
+        } else if (bodies.type != TYPE_SMS && bodies.type != TYPE_EMAIL) {
           errorMsg = "Body field 'type' can only be ['sms'|'email'].";
         } else if (
-          !isNumber(bodies.topUpCredit) &&
-          !numReg.test(bodies.topUpCredit)
+          !validator.isInt(bodies.topUpCredit, { min: 1, max: 20000 })
         ) {
           // Note that only 'topUpCredit' needs to be validated,
           // other fields are purely for references.
-          errorMsg = "Body field 'topUpCredit' needs to be a number.";
+          errorMsg =
+            "Body field 'topUpCredit' needs to be a number between 1 to 20000.";
         } else if (!isoDateRegex.test(bodies.paymentDate)) {
           // Note that this service doesn't expect the time portion to be accurate,
           // the time portion is just required to ensure Time offsets from UTC is set.
@@ -137,9 +139,17 @@ export function getBalance(): RequestHandler {
 export function topUpBalance(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     const smsTopupsTable = process.env.AWS_DYNAMO_DB_TABLE_SMS_TOPUPS;
+    const emailTopupsTable = process.env.AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS;
     const balanceTable = process.env.AWS_DYNAMO_DB_TABLE_BALANCE;
     const accountName = req.params.accountName;
-    const { paymentTotal, costPerSMS, topUpCredit, paymentDate } = req.body;
+    let putParams, updateParams;
+    const {
+      type,
+      paymentTotal,
+      costPerUnit,
+      topUpCredit,
+      paymentDate,
+    } = req.body;
 
     try {
       // Setup AWS config before using AWS services
@@ -148,24 +158,46 @@ export function topUpBalance(): RequestHandler {
       });
       // Create DynamoDB client
       const docClient = new AWS.DynamoDB.DocumentClient();
-      // Setup put params
-      const putParams = {
-        TableName: smsTopupsTable,
-        Item: {
-          account_name: accountName,
-          payment_total: paymentTotal,
-          cost_per_sms: costPerSMS,
-          topup_credit: topUpCredit,
-          payment_date: paymentDate,
-        },
-      };
-      // Setup update params
-      const updateParams = {
-        TableName: balanceTable,
-        Key: { account_name: accountName },
-        UpdateExpression: "SET sms_balance = sms_balance + :inc",
-        ExpressionAttributeValues: { ":inc": Number(topUpCredit) },
-      };
+      // Setup parameters params
+      if (type == TYPE_SMS) {
+        // Setup log transaction parameter
+        putParams = {
+          TableName: smsTopupsTable,
+          Item: {
+            account_name: accountName,
+            payment_total: paymentTotal,
+            cost_per_sms: costPerUnit,
+            topup_credit: topUpCredit,
+            payment_date: paymentDate,
+          },
+        };
+        // Setup topup  parameter
+        updateParams = {
+          TableName: balanceTable,
+          Key: { account_name: accountName },
+          UpdateExpression: "SET sms_balance = sms_balance + :inc",
+          ExpressionAttributeValues: { ":inc": Number(topUpCredit) },
+        };
+      } else if (type == TYPE_EMAIL) {
+        // Setup log transaction parameter
+        putParams = {
+          TableName: emailTopupsTable,
+          Item: {
+            account_name: accountName,
+            payment_total: paymentTotal,
+            cost_per_sms: costPerUnit,
+            topup_credit: topUpCredit,
+            payment_date: paymentDate,
+          },
+        };
+        // Setup topup  parameter
+        updateParams = {
+          TableName: balanceTable,
+          Key: { account_name: accountName },
+          UpdateExpression: "SET email_balance = email_balance + :inc",
+          ExpressionAttributeValues: { ":inc": Number(topUpCredit) },
+        };
+      }
 
       // Put new top-up event item
       await docClient.put(putParams).promise();
