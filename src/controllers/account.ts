@@ -12,6 +12,8 @@ import {
   HTTP_BAD_REQUEST,
   TYPE_SMS,
   TYPE_EMAIL,
+  ACCOUNT_EMART,
+  ACCOUNT_ATS,
 } from "../utils/constants";
 
 /**
@@ -48,8 +50,8 @@ export function validate(method: string): RequestHandler {
         if (isEmpty(params.accountName)) {
           errorMsg = "Route parameter 'accountName' is required.";
         } else if (
-          params.accountName != "emart" &&
-          params.accountName != "ats"
+          params.accountName != ACCOUNT_EMART &&
+          params.accountName != ACCOUNT_ATS
         ) {
           errorMsg =
             "Route parameter 'accountName' can only be ['emart'|'ats']..";

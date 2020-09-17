@@ -11,6 +11,8 @@ import {
   HTTP_OK,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_BAD_REQUEST,
+  ACCOUNT_EMART,
+  ACCOUNT_ATS,
 } from "../utils/constants";
 import { body, ValidationChain } from "express-validator";
 
@@ -52,6 +54,11 @@ export function validate(): RequestHandler {
         errorMsg =
           "'type', 'accountName', 'from', 'to', 'message' are required.";
       }
+    } else if (
+      bodies.accountName != ACCOUNT_EMART &&
+      bodies.accountName != ACCOUNT_ATS
+    ) {
+      errorMsg = "Route parameter 'accountName' can only be ['emart'|'ats']..";
     } else if (bodies.type == "email") {
       // Validation for Email notification
       if (
@@ -93,17 +100,21 @@ export function sendNotification(): RequestHandler {
     const balanceTable = process.env.AWS_DYNAMO_DB_TABLE_BALANCE;
     const type = req.body.type;
     const { accountName, from, to, message } = req.body;
-    let subject;
+    let subject, sendGridApiKey, deductCredit;
 
     if (type == "email") {
-      subject = req.body.email;
+      subject = req.body.subject;
+
+      if (accountName == ACCOUNT_ATS) {
+        sendGridApiKey = process.env.SEND_GRID_ATS_API_KEY_SECRET;
+      } else if (accountName == ACCOUNT_EMART) {
+        sendGridApiKey = process.env.SEND_GRID_EMART_API_KEY_SECRET;
+      }
     }
 
     try {
       // Setup AWS config before using AWS services
       AWS.config.update({
-        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
         region: process.env.APP_AWS_REGION,
       });
       // Create DynamoDB client
@@ -120,12 +131,12 @@ export function sendNotification(): RequestHandler {
       switch (type) {
         case "sms":
           // Send notification via SMS
-          let deductCredit = 0;
+          deductCredit = 0;
           if (process.env.SMS_ENABLED) {
             const twilioRes = await twilioClient.messages.create({
-              body: req.body.message,
-              to: req.body.to,
-              from: req.body.from,
+              body: message,
+              to: to,
+              from: from,
             });
             deductCredit = Number(twilioRes.numSegments); // numSegments is a string
           }
@@ -139,6 +150,7 @@ export function sendNotification(): RequestHandler {
           break;
         case "email":
           // Send notification via email
+          deductCredit = 1;
           const emailContent = {
             to: to,
             from: from, // Use the email address or domain you verified above
@@ -146,8 +158,15 @@ export function sendNotification(): RequestHandler {
             text: message,
           };
           // Send emails when error occured.
-          sendGrid.setApiKey(process.env.SEND_GRID_API_KEY_SECRET);
+          sendGrid.setApiKey(sendGridApiKey);
           await sendGrid.send(emailContent);
+          // Deduct balance from account
+          updateParams.UpdateExpression =
+            "set email_balance = email_balance - :dec";
+          updateParams.ExpressionAttributeValues = {
+            ":dec": deductCredit,
+          };
+          await docClient.update(updateParams).promise();
           break;
         default:
           return next(
@@ -165,10 +184,9 @@ export function sendNotification(): RequestHandler {
         new CustomError(
           HTTP_INTERNAL_SERVER_ERROR,
           "Error occured while sending notification.",
-          null
+          err
         )
       );
     }
-    // res.send(apiResponse(HTTP_OK, "Test ok.", null));
   });
 }

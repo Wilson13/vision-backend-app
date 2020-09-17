@@ -33,10 +33,10 @@ provider:
     AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'dev'}-balance
     AWS_DYNAMO_DB_TABLE_SMS_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-sms-topups
     AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-email-topups
-    SMS_ENABLED: false #Disable so sms is not actually sent but API call still works
+    SMS_ENABLED: true #Disable so sms is not actually sent but API call still works
     # Twilio
-    TWILIO_ACCOUNT_SID: ${ssm:/sftlog-sftp/TWILIO_ACCOUNT_SID~true}
-    TWILIO_AUTH_TOKEN: ${ssm:/sftlog-sftp/TWILIO_AUTH_TOKEN~true}
+    TWILIO_ACCOUNT_SID: ${ssm:/stlog-notification-service/TWILIO_ACCOUNT_SID~true}
+    TWILIO_AUTH_TOKEN: ${ssm:/stlog-notification-service/TWILIO_AUTH_TOKEN~true}
     # Send Grid - ATS
     SEND_GRID_ATS_API_KEY_ID: ${ssm:/stlog-notification-service/SEND_GRID_ATS_API_KEY_ID~true}
     SEND_GRID_ATS_API_KEY_SECRET: ${ssm:/stlog-notification-service/SEND_GRID_ATS_API_KEY_SECRET~true}

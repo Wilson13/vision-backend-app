@@ -10,5 +10,7 @@ export const SALT_ROUNDS = 10;
 export const PRODUCTION_ENV = "production";
 export const STAGING_ENV = "staging";
 export const DEVELOPMENT_ENV = "dev";
+export const ACCOUNT_EMART = "emart";
+export const ACCOUNT_ATS = "ats";
 export const TYPE_SMS = "sms";
 export const TYPE_EMAIL = "email";
