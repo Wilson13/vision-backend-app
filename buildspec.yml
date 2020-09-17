@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo install serverless framework
+      - npm install -g serverless
+  pre_build:
+    commands:
+      - echo install pre build commands
+      # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
+      - sls plugin uninstall --name serverless-offline
+  build:
+    commands:
+      - echo deployment started `date`
+      - echo deploy serverless framework custom codebase
+      - npm run deploy
+  post_build:
+    commands:
+      - echo post build completed on `date`

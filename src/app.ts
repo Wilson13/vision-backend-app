@@ -13,7 +13,8 @@ import dotenv from "dotenv";
 import errorResponse from "./utils/error_json";
 
 // import indexRouter from "./routes/index";
-import notioficationRouter from "./routes/notification";
+import accountRouter from "./routes/account";
+import notificationRouter from "./routes/notification";
 
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -34,6 +35,7 @@ const app = express();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
+// parse application/json
 app.use(logger("dev"));
 app.use(helmet());
 app.use(express.json());
@@ -43,7 +45,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
 
-app.use("/notification", notioficationRouter);
+app.use("/accounts", accountRouter);
+app.use("/notifications", notificationRouter);
 // app.use("/webhook", webhookRouter);
 app.use("/healthcheck", healthcheck());
 
