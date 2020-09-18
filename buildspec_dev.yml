@@ -4,6 +4,7 @@ phases:
   install:
     commands:
       - echo install serverless framework
+      - npm ci
       - npm install -g serverless
   pre_build:
     commands:
@@ -18,3 +19,7 @@ phases:
   post_build:
     commands:
       - echo post build completed on `date`
+
+cache:
+  paths:
+    - "./node_modules/**/*"
