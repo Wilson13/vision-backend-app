@@ -55,6 +55,7 @@
     "multer": "^1.4.2",
     "pug": "^3.0.0",
     "serverless": "^2.0.0",
+    "serverless-domain-manager": "^4.2.2",
     "serverless-http": "^2.5.0",
     "ssh2-sftp-client": "^5.3.1",
     "twilio": "^3.49.1",

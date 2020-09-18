@@ -2,6 +2,10 @@ service: stlog-notification-service
 custom:
   serverless-offline:
     useChildProcesses: true
+  customDomain:
+    domainName: "hedwig.freshturf.io"
+    basePath: ${self:provider.stage} # Use stage as the basePath to have /dev and /prod URL
+    stage: ${self:provider.stage}
 provider:
   name: aws
   iamRoleStatements:
