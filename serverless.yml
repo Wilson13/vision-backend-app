@@ -52,7 +52,7 @@ package:
   exclude:
     - src/**
     - .env
-    # - node_modules/serverless-offline/**
+    - node_modules/**
 plugins:
   - serverless-offline
 functions:
