@@ -8,11 +8,9 @@ import logger from "morgan";
 import healthcheck from "express-healthcheck";
 import helmet from "helmet"; // Secure Express app by setting various HTTP headers.
 import dotenv from "dotenv";
+import isEmpty from "validator/lib/isEmpty";
 
-// import log from "./utils/logger";
 import errorResponse from "./utils/error_json";
-
-// import indexRouter from "./routes/index";
 import accountRouter from "./routes/account";
 import notificationRouter from "./routes/notification";
 
@@ -24,6 +22,7 @@ import {
 } from "./utils/constants";
 
 const nodeEnv = process.env.NODE_ENV;
+const basePath = process.env.BASE_PATH ? "/" + process.env.BASE_PATH : "";
 if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
   // set up .env variables
   dotenv.config();
@@ -44,11 +43,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
-
-app.use("/accounts", accountRouter);
-app.use("/notifications", notificationRouter);
+app.use(basePath + "/accounts", accountRouter);
+app.use(basePath + "/notifications", notificationRouter);
 // app.use("/webhook", webhookRouter);
-app.use("/healthcheck", healthcheck());
+app.use(basePath + "/healthcheck", healthcheck());
 
 // This is placed here in case no handler was found for that
 // URI path (404 not found, which will then be caught by this).

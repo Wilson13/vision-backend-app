@@ -2,9 +2,12 @@ service: stlog-notification-service
 custom:
   serverless-offline:
     useChildProcesses: true
+  domains:
+    dev: dev-hedwig.freshturf.io
+    prod: hedwig.freshturf.io
   customDomain:
-    domainName: "hedwig.freshturf.io"
-    basePath: "test" #${self:provider.stage} # Use stage as the basePath to have /dev and /prod URL
+    domainName: ${self:custom.domains.${self:provider.stage}}
+    basePath: ${self:environment.BASE_Path} # Use stage as the basePath to have /dev and /prod URL
     stage: ${self:provider.stage}
     createRoute53Record: false
     certificateArn: arn:aws:acm:ap-southeast-1:376533323759:certificate/59a246fb-d2c6-49bf-8e49-48d73df56b92
@@ -34,6 +37,7 @@ provider:
   timeout: 30
   environment:
     NODE_ENV: dev
+    BASE_PATH: "" #${self:provider.stage}
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
     AWS_S3_MAX_KEYS: 100 # max number of object keys to be returned
