@@ -4,12 +4,12 @@ phases:
   install:
     commands:
       - echo install serverless framework
+      - npm install
       - npm install -g serverless
   pre_build:
     commands:
       - echo install pre build commands
       # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
-      - npm install
       - sls plugin uninstall --name serverless-offline
   build:
     commands:
@@ -19,3 +19,7 @@ phases:
   post_build:
     commands:
       - echo post build completed on `date`
+
+cache:
+  paths:
+    - "./node_modules/**/*"
