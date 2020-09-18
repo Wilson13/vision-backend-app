@@ -8,6 +8,7 @@ custom:
     stage: ${self:provider.stage}
     createRoute53Record: false
     certificateName: "*.freshturf.io"
+    endpointType: regional
 provider:
   name: aws
   iamRoleStatements:
@@ -56,7 +57,7 @@ package:
     # - node_modules/**
 plugins:
   - serverless-offline
-  - serverless-plugin-custom-domain
+  - serverless-domain-manager
 functions:
   app:
     handler: dist/bin/www.handler
