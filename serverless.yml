@@ -7,7 +7,7 @@ custom:
     basePath: "test" #${self:provider.stage} # Use stage as the basePath to have /dev and /prod URL
     stage: ${self:provider.stage}
     createRoute53Record: false
-    certificateName: "*.freshturf.io"
+    certificateArn: arn:aws:acm:ap-southeast-1:376533323759:certificate/59a246fb-d2c6-49bf-8e49-48d73df56b92
     endpointType: regional
 provider:
   name: aws
