@@ -4,7 +4,7 @@ custom:
     useChildProcesses: true
   customDomain:
     domainName: "hedwig.freshturf.io"
-    basePath: ${self:provider.stage} # Use stage as the basePath to have /dev and /prod URL
+    basePath: "test" #${self:provider.stage} # Use stage as the basePath to have /dev and /prod URL
     stage: ${self:provider.stage}
     createRoute53Record: false
     certificateName: "*.freshturf.io"
