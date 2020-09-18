@@ -47,7 +47,6 @@ provider:
     # Send Grid - Emart
     SEND_GRID_EMART_API_KEY_ID: ${ssm:/stlog-notification-service/SEND_GRID_EMART_API_KEY_ID~true}
     SEND_GRID_EMART_API_KEY_SECRET: ${ssm:/stlog-notification-service/SEND_GRID_EMART_API_KEY_SECRET~true}
-
 package:
   exclude:
     - src/**
