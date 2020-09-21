@@ -21,17 +21,21 @@ import { body, ValidationChain } from "express-validator";
  */
 export function sanitize(): ValidationChain[] {
   return [
-    body("type").trim().escape(),
-    body("accountName").trim().escape(),
-    body("from").trim().escape(),
-    body("to").trim().escape(),
-    body("subject").trim().escape(),
-    body("message").trim().escape(),
+    body("type").trim().stripLow(true),
+    body("accountName").trim().stripLow(true),
+    body("from").trim().stripLow(true),
+    body("subject").trim().stripLow(true),
+    body("message").trim().stripLow(true),
   ];
 }
 
 /**
  * Validator middleware for notifications API
+ * Note:
+ * It is safe to use validator for fields sanitized because sanitize() function has
+ * ensured the body fields are string (or empty string e.g. '') instead of undefined.
+ *
+ * If not, isEmpty will not work for fields that are undefined.
  */
 export function validate(): RequestHandler {
   return (req, res, next) => {
@@ -64,15 +68,62 @@ export function validate(): RequestHandler {
       if (
         isEmpty(bodies.accountName) ||
         isEmpty(bodies.from) ||
-        isEmpty(bodies.to) ||
         isEmpty(bodies.subject) ||
         isEmpty(bodies.message)
       ) {
         errorMsg =
           "'type', 'accountName', 'from', 'to', 'subject', 'message' are required.";
-      } else if (!isEmail(bodies.to) || !isEmail(bodies.from)) {
-        // Check "to" and "from" are valid emails
-        errorMsg = "'from', 'to' have to be valid email addresses.";
+      } else if (!Array.isArray(bodies.to)) {
+        errorMsg = "'to' is required and has to be an array";
+      } else if (
+        !bodies.to.some((_unusedParam, index, arr) => {
+          arr[index] = arr[index].trim();
+          return isEmail(arr[index]);
+        })
+      ) {
+        // Check "to" recipient are all valid emails
+        errorMsg = "'to' has to be valid email addresses.";
+      } else if (!isEmail(bodies.from)) {
+        // Check "from" is a valid email address
+        errorMsg = "'from' has to be a valid email address.";
+      }
+
+      // Validations below are segregated because they contain positive-check logic
+      // (optional fields) that will be true if the values are valid and will break else-if chain.
+
+      // Notes:
+      // 1. Can't use isEmpty here because cc and bcc fields are not sanitized and could be undefined.
+      // 2. Can't check only isArray because they are optional, if they are undefined, errorMsg
+      // will always be non-empty, rendering it into a "required" field.
+      // 3. Checking 'truthy' is enough here so the value can't be null, undefined, NaN, empty string (""), 0, or false.
+      if (bodies.cc && !Array.isArray(bodies.cc)) {
+        // If bodies.cc is defined then check "cc" recipient are all valid emails.
+        // If it is undefined, no need to check if it's an array or not.
+        errorMsg = "'cc' has to be an array";
+      } else if (bodies.cc && Array.isArray(bodies.cc)) {
+        // If bodies.cc is defined and it is indeed an array.
+        // Check if all elements are valid email addresses.
+        if (
+          !bodies.cc.some((_unusedParam, index, arr) => {
+            arr[index] = arr[index].trim();
+            return isEmail(arr[index]);
+          })
+        ) {
+          errorMsg = "'cc' has to be valid email addresses.";
+        }
+      }
+
+      if (bodies.bcc && !Array.isArray(bodies.bcc)) {
+        errorMsg = "'bcc' has to be an array";
+      } else if (bodies.bcc && Array.isArray(bodies.bcc)) {
+        if (
+          !bodies.bcc.some((_unusedParam, index, arr) => {
+            arr[index] = arr[index].trim();
+            return isEmail(arr[index]);
+          })
+        ) {
+          errorMsg = "'bcc' has to be valid email addresses.";
+        }
       }
     }
 
@@ -96,8 +147,17 @@ export function sendNotification(): RequestHandler {
     let twilioClient;
     const balanceTable = process.env.AWS_DYNAMO_DB_TABLE_BALANCE;
     const type = req.body.type;
-    const { accountName, from, to, message } = req.body;
-    let subject, sendGridApiKey, deductCredit;
+    // cc and bcc requires default values since they are optional and could be undefined.
+    const {
+      accountName,
+      from,
+      to,
+      message,
+      subject,
+      cc = "",
+      bcc = "",
+    } = req.body;
+    let sendGridApiKey, deductCredit;
 
     if (type == "sms") {
       if (accountName == ACCOUNT_ATS) {
@@ -112,7 +172,6 @@ export function sendNotification(): RequestHandler {
         );
       }
     } else if (type == "email") {
-      subject = req.body.subject;
       if (accountName == ACCOUNT_ATS) {
         sendGridApiKey = process.env.SEND_GRID_ATS_API_KEY_SECRET;
       } else if (accountName == ACCOUNT_EMART) {
@@ -161,6 +220,8 @@ export function sendNotification(): RequestHandler {
           deductCredit = 1;
           const emailContent = {
             to: to,
+            cc: cc,
+            bcc: bcc,
             from: from, // Use the email address or domain you verified above
             subject: subject,
             text: message,

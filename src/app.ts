@@ -8,7 +8,6 @@ import logger from "morgan";
 import healthcheck from "express-healthcheck";
 import helmet from "helmet"; // Secure Express app by setting various HTTP headers.
 import dotenv from "dotenv";
-import isEmpty from "validator/lib/isEmpty";
 
 import errorResponse from "./utils/error_json";
 import accountRouter from "./routes/account";
