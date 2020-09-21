@@ -10,7 +10,7 @@ It has debit and credit of account balance built in to track consumption and top
 
 ## Account Usage Segregation
 
-On Twilio, SMS transactions are segregated using "Alphanumeric ID" as sender, hence both ATS and Emart sends SMS using the ame API credentials.
+On Twilio, SMS transactions are segregated using subaccounts. "Alphanumeric ID" is used as sender so no additional phone number is required.
 
 On SendGrid, Email transactions are segregated using API keys.
 
