@@ -6,7 +6,7 @@ Stlog Notification Service
 
 This service provides SMS and Email service to other microservices.
 
-It has debit, credit, and logging built in to track consumption and top-ups.
+It has debit and credit of account balance built in to track consumption and top-ups.
 
 ## Account Usage Segregation
 
@@ -18,9 +18,14 @@ On SendGrid, Email transactions are segregated using API keys.
 
 Whenever 'accountName' is required, there's only two options now: emart or ats.
 
+**Notification**
+
     POST    /notifications
-    GET     /accounts/:accountName/balance
-    POST    /accounts/:accountName/topups
+
+**Account**
+
+    GET /accounts/:accountName/balance
+    POST /accounts/:accountName/topups
 
 ## Environment Variables
 
@@ -34,7 +39,7 @@ e.g. Setting up hedwig.freshturf.io/test to point to this lambda's dev stage
 
 **express-validator**
 
-Used for sanitization only, even though it's validation middleware proves to provide a better structured and cleaner code, until the response can be tweaked to fit our needs, validation middle ware is still coded.
+Used for sanitization only, even though it's validation middleware proves to provide a better-structured and cleaner code, until the response can be tweaked to fit our needs, validation middleware is still coded.
 
 **validator.js**
 

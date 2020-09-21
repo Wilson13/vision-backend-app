@@ -93,18 +93,26 @@ export function validate(): RequestHandler {
 export function sendNotification(): RequestHandler {
   return asyncHandler(async (req, res, next) => {
     // Setup constants
-    const twilioClient = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
+    let twilioClient;
     const balanceTable = process.env.AWS_DYNAMO_DB_TABLE_BALANCE;
     const type = req.body.type;
     const { accountName, from, to, message } = req.body;
     let subject, sendGridApiKey, deductCredit;
 
-    if (type == "email") {
+    if (type == "sms") {
+      if (accountName == ACCOUNT_ATS) {
+        twilioClient = twilio(
+          process.env.TWILIO_ATS_ACCOUNT_SID,
+          process.env.TWILIO_ATS_AUTH_TOKEN
+        );
+      } else if (accountName == ACCOUNT_EMART) {
+        twilioClient = twilio(
+          process.env.TWILIO_EMART_ACCOUNT_SID,
+          process.env.TWILIO_EMART_AUTH_TOKEN
+        );
+      }
+    } else if (type == "email") {
       subject = req.body.subject;
-
       if (accountName == ACCOUNT_ATS) {
         sendGridApiKey = process.env.SEND_GRID_ATS_API_KEY_SECRET;
       } else if (accountName == ACCOUNT_EMART) {
