@@ -70,5 +70,9 @@ functions:
     handler: dist/bin/www.handler
     events:
       - http: ANY /
-      - http: "ANY {proxy+}"
-        authorizer: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_iGNgVk2Ou
+      - http:
+          path: / {proxy+}
+          method: any
+          authorizer:
+            name: CognitoAuthorizer
+            arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_iGNgVk2Ou
