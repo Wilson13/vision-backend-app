@@ -23,7 +23,6 @@ import {
 const nodeEnv = process.env.NODE_ENV;
 const basePath = process.env.BASE_PATH ? "/" + process.env.BASE_PATH : "";
 if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
-  // set up .env variables
   dotenv.config();
 }
 
