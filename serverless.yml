@@ -76,4 +76,4 @@ functions:
           # authorizer: aws_iam
           authorizer:
             name: CognitoAuthorizer
-            arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_iGNgVk2Ou
+            arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_xrpkWk60y
