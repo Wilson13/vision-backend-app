@@ -73,14 +73,33 @@ plugins:
 functions:
   app:
     handler: dist/bin/www.handler
+    timeout: 60
     events:
-      - http: ANY /
       - http:
-          path: /{proxy+}
-          method: any
+          path: accounts/{accountName}/balance
+          method: GET
+          cors: true
           authorizer:
             arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
-          # authorizer: aws_iam
-          # authorizer:
-          # name: CognitoAuthorizer
-          # arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_xrpkWk60y
+      - http:
+          path: accounts/{accountName}/topups
+          method: POST
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
+      - http:
+          path: notifications
+          method: POST
+          cors: true
+          authorizer:
+            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
+      # - http: ANY /
+      # - http:
+      #     path: /{proxy+}
+      #     method: any
+      #     authorizer:
+      #       arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
+      # authorizer: aws_iam
+      # authorizer:
+      # name: CognitoAuthorizer
+      # arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_xrpkWk60y
