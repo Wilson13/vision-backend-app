@@ -79,19 +79,22 @@ functions:
           path: accounts/{accountName}/balance
           method: GET
           cors: true
-          # authorizer:
-          #   arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
+          authorizer:
+            name: notificationAuthFunc
+            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
       - http:
           path: accounts/{accountName}/topups
           method: POST
           cors: true
           authorizer:
+            name: notificationAuthFunc
             arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
       - http:
           path: notifications
           method: POST
           cors: true
           authorizer:
+            name: notificationAuthFunc
             arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
       # - http: ANY /
       # - http:
