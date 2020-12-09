@@ -85,8 +85,8 @@ functions:
           path: accounts/{accountName}/topups
           method: POST
           cors: true
-          # authorizer:
-          #   arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
+          authorizer:
+            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
       - http:
           path: notifications
           method: POST
