@@ -2,6 +2,9 @@ service: stlog-notification-service
 custom:
   serverless-offline:
     useChildProcesses: true
+  log-level:
+    dev: debug
+    prod: info
   domains:
     dev: dev-hedwig.freshturf.io
     prod: hedwig.freshturf.io
@@ -37,6 +40,7 @@ provider:
   timeout: 30
   environment:
     NODE_ENV: dev
+    LOG_LEVEL: ${self:custom.log-level.${self:provider.stage}}
     BASE_PATH: "" #${self:provider.stage}
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
@@ -45,6 +49,7 @@ provider:
     AWS_DYNAMO_DB_TABLE_SMS_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-sms-topups
     AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-email-topups
     SMS_ENABLED: true #Disable so sms is not actually sent but API call still works
+    EMAIL_ENABLED: true #Disable so email is not actually sent but API call still works
     # Twilio - ATS
     TWILIO_ATS_ACCOUNT_SID: ${ssm:/stlog-notification-service/TWILIO_ATS_ACCOUNT_SID~true}
     TWILIO_ATS_AUTH_TOKEN: ${ssm:/stlog-notification-service/TWILIO_ATS_AUTH_TOKEN~true}

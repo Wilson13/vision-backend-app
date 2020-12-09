@@ -105,3 +105,4 @@ ftctl/
 *.code-workspace
 node_modules
 docker-compose.yaml
+assets/

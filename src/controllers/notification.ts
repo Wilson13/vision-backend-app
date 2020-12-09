@@ -1,12 +1,16 @@
 import { RequestHandler } from "express";
 import AWS from "aws-sdk";
 import sendGrid from "@sendgrid/mail";
+import { MailData, MailDataRequired } from "@sendgrid/helpers/classes/mail";
 import twilio from "twilio";
 import isEmpty from "validator/lib/isEmpty";
 import isEmail from "validator/lib/isEmail";
+import { body, ValidationChain } from "express-validator";
+import { promises as fsPromises } from "fs";
 
 import asyncHandler from "../utils/async_handler";
 import { CustomError } from "../utils/helper";
+import { logger } from "../utils/logger";
 import {
   HTTP_OK,
   HTTP_INTERNAL_SERVER_ERROR,
@@ -14,7 +18,6 @@ import {
   ACCOUNT_EMART,
   ACCOUNT_ATS,
 } from "../utils/constants";
-import { body, ValidationChain } from "express-validator";
 
 /**
  * Sanitizer middleware for notifications API
@@ -24,6 +27,7 @@ export function sanitize(): ValidationChain[] {
     body("type").trim().stripLow(true),
     body("accountName").trim().stripLow(true),
     body("from").trim().stripLow(true),
+    body("to").trim().stripLow(true),
     body("subject").trim().stripLow(true),
     body("message").trim().stripLow(true),
   ];
@@ -68,13 +72,28 @@ export function validate(): RequestHandler {
       if (
         isEmpty(bodies.accountName) ||
         isEmpty(bodies.from) ||
+        isEmpty(bodies.to) ||
         isEmpty(bodies.subject) ||
         isEmpty(bodies.message)
       ) {
         errorMsg =
           "'type', 'accountName', 'from', 'to', 'subject', 'message' are required.";
-      } else if (!Array.isArray(bodies.to)) {
+        return next(new CustomError(HTTP_BAD_REQUEST, errorMsg, null));
+      }
+      // bodies.to will not be empty by this point
+      bodies.to = JSON.parse(bodies.to);
+      // Parse cc and bcc if they are not undefined, can't use
+      // isEmpty because they are not sanatised into empty string.
+      if (bodies.cc) {
+        bodies.cc = JSON.parse(bodies.cc);
+      }
+      if (bodies.bcc) {
+        bodies.bcc = JSON.parse(bodies.bcc);
+      }
+
+      if (!Array.isArray(bodies.to)) {
         errorMsg = "'to' is required and has to be an array";
+        return next(new CustomError(HTTP_BAD_REQUEST, errorMsg, null));
       } else if (
         !bodies.to.some((_unusedParam, index, arr) => {
           arr[index] = arr[index].trim();
@@ -123,6 +142,16 @@ export function validate(): RequestHandler {
           })
         ) {
           errorMsg = "'bcc' has to be valid email addresses.";
+        }
+      }
+
+      // Check file type
+      if (req.file) {
+        logger.debug(`file: ${JSON.stringify(req.file)}`);
+        if (req.file.fieldname != "attachment") {
+          errorMsg = "To attach file, field name 'attachment' is required.";
+        } else if (!req.file.originalname.endsWith(".csv")) {
+          errorMsg = "'attachment' can only be a CSV file.";
         }
       }
     }
@@ -218,7 +247,7 @@ export function sendNotification(): RequestHandler {
         case "email":
           // Send notification via email
           deductCredit = 1;
-          const emailContent = {
+          const emailContent: MailDataRequired = {
             to: to,
             cc: cc,
             bcc: bcc,
@@ -226,9 +255,26 @@ export function sendNotification(): RequestHandler {
             subject: subject,
             text: message,
           };
-          // Send emails when error occured.
-          sendGrid.setApiKey(sendGridApiKey);
-          await sendGrid.send(emailContent);
+
+          // If a file was uploaded, attach this file.
+          if (req.file) {
+            const fileContent = await fsPromises.readFile(
+              req.file.path,
+              "base64"
+            );
+            emailContent.attachments = [
+              {
+                filename: req.file.originalname,
+                content: fileContent,
+                type: "application/csv",
+              },
+            ];
+          }
+          if (process.env.EMAIL_ENABLED) {
+            // Send emails when error occured.
+            sendGrid.setApiKey(sendGridApiKey);
+            await sendGrid.send(emailContent);
+          }
           // Deduct balance from account
           updateParams.UpdateExpression =
             "set email_balance = email_balance - :dec";
