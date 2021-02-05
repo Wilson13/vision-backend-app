@@ -20,7 +20,7 @@ phases:
     commands:
       - echo deployment started `date`
       - echo deploy serverless framework custom codebase
-      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /.key/sa-key.json
+      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > .key/sa-key.json
       - ls
       - ls .key/
       - npm run deploy-dev
