@@ -10,19 +10,13 @@ phases:
     commands:
       - echo install pre build commands
       # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
+      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output .key/sa-key.json --query Parameter.Value
       - sls plugin uninstall --name serverless-offline
-
-      # - rm -rf node_modules/sharp
-      # - npm install --arch=x64 --platform=linux sharp
-      # - npm install @types/sharp
-
       - npm outdated
   build:
     commands:
       - echo deployment started `date`
       - echo deploy serverless framework custom codebase
-      # - rm -rf node_modules/sharp
-      # - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
       - npm run deploy-dev
   post_build:
     commands:
