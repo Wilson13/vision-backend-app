@@ -23,7 +23,7 @@ provider:
     APP_AWS_REGION: ap-southeast-1
     # S3 Bucket
     AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-{self:service}
-    GOOGLE_APPLICATION_CREDENTIALS: ".key/sa-key.json" #lambda provides only /tmp/ directory
+    GOOGLE_APPLICATION_CREDENTIALS: "key/sa-key.json" #lambda provides only /tmp/ directory
 package:
   exclude:
     - src/**

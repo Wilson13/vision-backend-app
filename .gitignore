@@ -106,4 +106,4 @@ ftctl/
 node_modules
 docker-compose.yaml
 assets/
-.key
+key/*.json
