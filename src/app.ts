@@ -10,8 +10,7 @@ import helmet from "helmet"; // Secure Express app by setting various HTTP heade
 import dotenv from "dotenv";
 
 import errorResponse from "./utils/error_json";
-import accountRouter from "./routes/account";
-import notificationRouter from "./routes/notification";
+import detectRouter from "./routes/detect";
 
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -28,12 +27,20 @@ if (!(nodeEnv === PRODUCTION_ENV || nodeEnv === STAGING_ENV)) {
 
 const app = express();
 
+const allowCrossDomain = function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+};
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
 // parse application/json
 app.use(logger("dev"));
+app.use(allowCrossDomain);
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -41,8 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
-app.use(basePath + "/accounts", accountRouter);
-app.use(basePath + "/notifications", notificationRouter);
+app.use(basePath + "/detect", detectRouter);
 // app.use("/webhook", webhookRouter);
 app.use(basePath + "/healthcheck", healthcheck());
 

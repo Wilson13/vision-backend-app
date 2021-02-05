@@ -1,35 +1,12 @@
-service: stlog-notification-service
+service: vision-backend-app
 custom:
   serverless-offline:
     useChildProcesses: true
   log-level:
     dev: debug
     prod: info
-  domains:
-    dev: dev-hedwig.freshturf.io
-    prod: hedwig.freshturf.io
-  customDomain:
-    domainName: ${self:custom.domains.${self:provider.stage}}
-    basePath: ${self:provider.environment.BASE_PATH} # Use stage as the basePath to have /dev and /prod URL
-    stage: ${self:provider.stage}
-    createRoute53Record: false
-    certificateArn: arn:aws:acm:ap-southeast-1:376533323759:certificate/59a246fb-d2c6-49bf-8e49-48d73df56b92
-    endpointType: regional
 provider:
   name: aws
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_BALANCE}"
-        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_SMS_TOPUPS}"
-        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS}"
   runtime: nodejs12.x
   apiGateway:
     binaryMediaTypes:
@@ -44,24 +21,7 @@ provider:
     BASE_PATH: "" #${self:provider.stage}
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
-    AWS_S3_MAX_KEYS: 100 # max number of object keys to be returned
-    AWS_DYNAMO_DB_TABLE_BALANCE: ${opt:stage, self:provider.stage, 'dev'}-balance
-    AWS_DYNAMO_DB_TABLE_SMS_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-sms-topups
-    AWS_DYNAMO_DB_TABLE_EMAIL_TOPUPS: ${opt:stage, self:provider.stage, 'dev'}-email-topups
-    SMS_ENABLED: true #Disable so sms is not actually sent but API call still works
-    EMAIL_ENABLED: true #Disable so email is not actually sent but API call still works
-    # Twilio - ATS
-    TWILIO_ATS_ACCOUNT_SID: ${ssm:/stlog-notification-service/TWILIO_ATS_ACCOUNT_SID~true}
-    TWILIO_ATS_AUTH_TOKEN: ${ssm:/stlog-notification-service/TWILIO_ATS_AUTH_TOKEN~true}
-    # Twilio - Emart
-    TWILIO_EMART_ACCOUNT_SID: ${ssm:/stlog-notification-service/TWILIO_EMART_ACCOUNT_SID~true}
-    TWILIO_EMART_AUTH_TOKEN: ${ssm:/stlog-notification-service/TWILIO_EMART_AUTH_TOKEN~true}
-    # Send Grid - ATS
-    SEND_GRID_ATS_API_KEY_ID: ${ssm:/stlog-notification-service/SEND_GRID_ATS_API_KEY_ID~true}
-    SEND_GRID_ATS_API_KEY_SECRET: ${ssm:/stlog-notification-service/SEND_GRID_ATS_API_KEY_SECRET~true}
-    # Send Grid - Emart
-    SEND_GRID_EMART_API_KEY_ID: ${ssm:/stlog-notification-service/SEND_GRID_EMART_API_KEY_ID~true}
-    SEND_GRID_EMART_API_KEY_SECRET: ${ssm:/stlog-notification-service/SEND_GRID_EMART_API_KEY_SECRET~true}
+    GOOGLE_APPLICATION_CREDENTIALS: ".key/sa-key.json"
 package:
   exclude:
     - src/**
@@ -69,46 +29,13 @@ package:
     # - node_modules/**
 plugins:
   - serverless-offline
-  - serverless-domain-manager
+  # - serverless-domain-manager
 functions:
   app:
     handler: dist/bin/www.handler
     timeout: 60
     events:
       - http:
-          path: accounts/{accountName}/balance
-          method: GET
-          cors: true
-          authorizer:
-            name: notificationAuthFunc
-            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
-            resultTtlInSeconds: 0
-            type: token
-      - http:
-          path: accounts/{accountName}/topups
+          path: detect
           method: POST
           cors: true
-          authorizer:
-            name: notificationAuthFunc
-            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
-            resultTtlInSeconds: 0
-            type: token
-      - http:
-          path: notifications
-          method: POST
-          cors: true
-          authorizer:
-            name: notificationAuthFunc
-            arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
-            resultTtlInSeconds: 0
-            type: token
-      # - http: ANY /
-      # - http:
-      #     path: /{proxy+}
-      #     method: any
-      #     authorizer:
-      #       arn: arn:aws:lambda:ap-southeast-1:376533323759:function:emart-auth-${opt:stage, self:provider.stage, 'dev'}-authorizerFunc
-      # authorizer: aws_iam
-      # authorizer:
-      # name: CognitoAuthorizer
-      # arn: arn:aws:cognito-idp:ap-southeast-1:376533323759:userpool/ap-southeast-1_xrpkWk60y
