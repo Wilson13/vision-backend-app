@@ -49,6 +49,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
 app.use(basePath + "/detect", detectRouter);
+app.use(basePath + "/detect_test", detectRouter);
+
 // app.use("/webhook", webhookRouter);
 app.use(basePath + "/healthcheck", healthcheck());
 

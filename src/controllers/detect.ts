@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
 import getImageSize from "image-size";
 import fs from "fs";
-import sharp from "sharp";
+// import sharp from "sharp";
 import vision from "@google-cloud/vision";
 
 import { RequestHandler } from "express";
@@ -63,6 +63,53 @@ export function validate(): RequestHandler {
 }
 
 export function detectObject(): RequestHandler {
+  return asyncHandler(async (req, res) => {
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient();
+
+    // Prepare file
+    // const assetFile = `assets/street.jpeg`;
+    const file = req.file.path;
+    const imgSize = getImageSize(file);
+    const buffer = fs.readFileSync(file);
+    const request = {
+      image: { content: buffer },
+    };
+
+    // Prepare variables for Vision API
+    const resJSON: ResponseObj[] = [];
+
+    // Call Vision API for Object Detection
+    const [result] = await client.objectLocalization(request);
+    const objects = result.localizedObjectAnnotations;
+
+    // Process each returned object
+    objects.forEach((object) => {
+      const resObj = <ResponseObj>{};
+      logger.debug(`Name: ${object.name}`);
+      logger.debug(`Confidence: ${object.score}`);
+      resObj.name = object.name;
+      resObj.confidence = object.score.toString();
+      resObj.bounds = [];
+
+      const vertices = object.boundingPoly.vertices;
+      vertices.forEach((v) => {
+        const vertex: Vertex = <Vertex>{};
+        logger.debug(`x: ${v.x}, y:${v.y}`);
+        vertex.x = v.x;
+        vertex.y = v.y;
+        resObj.bounds.push(vertex);
+      });
+      resJSON.push(resObj);
+    });
+
+    // TODO: Draw bounding boxes and include image in the response to caller
+    // await drawBoundingBoxes(buffer, imgSize, resJSON);
+    res.status(HTTP_OK).send(resJSON);
+  });
+}
+
+export function detectObjectTest(): RequestHandler {
   return asyncHandler(async (req, res) => {
     // Creates a client
     const client = new vision.ImageAnnotatorClient();
