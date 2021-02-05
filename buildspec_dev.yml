@@ -20,12 +20,15 @@ phases:
     commands:
       - echo deployment started `date`
       - echo deploy serverless framework custom codebase
+      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /.key/sa-key.json
+      - ls
+      - ls .key/
       - npm run deploy-dev
   post_build:
     commands:
       - echo post build completed on `date`
-      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /tmp/sa-key.json
-      - ls /tmp/
+      # - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /tmp/sa-key.json
+      # - ls /tmp/
 
 cache:
   paths:
