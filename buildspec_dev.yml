@@ -12,7 +12,7 @@ phases:
       # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
       - sls plugin uninstall --name serverless-offline
       - rm -rf node_modules/sharp
-      - npm install --arch=x64 --platform=linux sharp
+      - npm install --arch=x64 --platform=linux sharp @types/sharp
       - npm outdated
   build:
     commands:
