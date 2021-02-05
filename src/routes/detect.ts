@@ -1,10 +1,7 @@
 import express from "express";
 import multer from "multer";
 import * as detectController from "../controllers/detect";
-import { HTTP_BAD_REQUEST } from "../utils/constants";
-import { CustomError } from "../utils/helper";
 const router = express.Router();
-const maxSize = 2 * 1000 * 1000; // 2 MB
 
 const storage = multer.diskStorage({
   destination: "/tmp/",
