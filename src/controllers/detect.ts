@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
 import getImageSize from "image-size";
 import fs from "fs";
-import Sharp from "Sharp";
+import sharp from "sharp";
 import vision from "@google-cloud/vision";
 
 import { RequestHandler } from "express";
@@ -155,7 +155,7 @@ async function drawBoundingBoxes(
     );
   });
 
-  const image = Sharp(imageBuffer);
+  const image = sharp(imageBuffer);
   const metadata = await image.metadata();
 
   let svgElement =
