@@ -10,7 +10,7 @@ phases:
     commands:
       - echo install pre build commands
       # Remove offline plugin to enable successful build (this plugin lives in dev dependencies and causes issues during build time)
-      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > ./key/sa-key.json
+      - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /tmp/sa-key.json
       - sls plugin uninstall --name serverless-offline
       - npm outdated
   build:
