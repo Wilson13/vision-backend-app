@@ -25,6 +25,7 @@ phases:
     commands:
       - echo post build completed on `date`
       - aws ssm get-parameter --name "/dev-vision-backend-app/sa-key.json" --with-decryption --output json  --query Parameter.Value > /tmp/sa-key.json
+      - ls /tmp/
 
 cache:
   paths:
