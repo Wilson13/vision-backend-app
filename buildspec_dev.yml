@@ -6,8 +6,6 @@ phases:
       - echo install serverless framework
       - npm ci
       - npm install -g serverless
-      - rm -rf node_modules/sharp
-      - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
   pre_build:
     commands:
       - echo install pre build commands
@@ -23,6 +21,8 @@ phases:
     commands:
       - echo deployment started `date`
       - echo deploy serverless framework custom codebase
+      - rm -rf node_modules/sharp
+      - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
       - npm run deploy-dev
   post_build:
     commands:
