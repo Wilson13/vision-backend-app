@@ -5,11 +5,6 @@ custom:
   log-level:
     dev: debug
     prod: info
-  bundle:
-    packagerOptions:
-      scripts:
-        - rm -rf node_modules/sharp
-        - npm install --arch=x64 --platform=linux sharp
 provider:
   name: aws
   runtime: nodejs12.x
