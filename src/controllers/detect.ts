@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
 import getImageSize from "image-size";
 import fs from "fs";
-// import sharp from "sharp";
+import sharp from "sharp";
 import vision from "@google-cloud/vision";
 
 import { RequestHandler } from "express";
