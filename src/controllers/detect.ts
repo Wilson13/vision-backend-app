@@ -10,7 +10,12 @@ import isEmpty from "validator/lib/isEmpty";
 import asyncHandler from "../utils/async_handler";
 import { CustomError } from "../utils/helper";
 import { logger } from "../utils/logger";
-import { HTTP_OK, HTTP_BAD_REQUEST, BUCKET_NAME } from "../utils/constants";
+import {
+  HTTP_OK,
+  HTTP_BAD_REQUEST,
+  BUCKET_NAME,
+  PROCESS_IMAGE_NAME,
+} from "../utils/constants";
 import { ISize } from "image-size/dist/types/interface";
 
 type Vertex = {
@@ -22,6 +27,11 @@ type ResponseObj = {
   name: string;
   confidence: string;
   bounds: Vertex[];
+};
+
+type JSONResponse = {
+  detectRes: ResponseObj[];
+  url: string;
 };
 
 /**
@@ -77,54 +87,7 @@ export function detectObject(): RequestHandler {
     };
 
     // Prepare variables for Vision API
-    const resJSON: ResponseObj[] = [];
-
-    // Call Vision API for Object Detection
-    const [result] = await client.objectLocalization(request);
-    const objects = result.localizedObjectAnnotations;
-
-    // Process each returned object
-    objects.forEach((object) => {
-      const resObj = <ResponseObj>{};
-      // logger.debug(`Name: ${object.name}`);
-      // logger.debug(`Confidence: ${object.score}`);
-      resObj.name = object.name;
-      resObj.confidence = object.score.toString();
-      resObj.bounds = [];
-
-      const vertices = object.boundingPoly.vertices;
-      vertices.forEach((v) => {
-        const vertex: Vertex = <Vertex>{};
-        // logger.debug(`x: ${v.x}, y:${v.y}`);
-        vertex.x = v.x;
-        vertex.y = v.y;
-        resObj.bounds.push(vertex);
-      });
-      resJSON.push(resObj);
-    });
-
-    // TODO: Draw bounding boxes and include image in the response to caller
-    // await drawBoundingBoxes(buffer, imgSize, resJSON);
-    res.status(HTTP_OK).send(resJSON);
-  });
-}
-
-export function detectObjectTest(): RequestHandler {
-  return asyncHandler(async (req, res) => {
-    // Creates a client
-    const client = new vision.ImageAnnotatorClient();
-
-    // Prepare file
-    const assetFile = `assets/street.jpeg`;
-    // const file = req.file.path;
-    const imgSize = getImageSize(assetFile);
-    const buffer = fs.readFileSync(assetFile);
-    const request = {
-      image: { content: buffer },
-    };
-
-    // Prepare variables for Vision API
-    const resJSON: ResponseObj[] = [];
+    const apiRes: JSONResponse = { detectRes: [], url: "" };
 
     // Call Vision API for Object Detection
     const [result] = await client.objectLocalization(request);
@@ -147,12 +110,59 @@ export function detectObjectTest(): RequestHandler {
         vertex.y = v.y;
         resObj.bounds.push(vertex);
       });
-      resJSON.push(resObj);
+      apiRes.detectRes.push(resObj);
     });
 
-    // TODO: Draw bounding boxes and include image in the response to caller
-    await drawBoundingBoxes(buffer, imgSize, resJSON);
-    res.status(HTTP_OK).send(resJSON);
+    // Draw bounding boxes and include image in the response to caller
+    apiRes.url = await drawBoundingBoxes(buffer, imgSize, apiRes.detectRes);
+    res.status(HTTP_OK).send(apiRes);
+  });
+}
+
+export function detectObjectAssetImage(): RequestHandler {
+  return asyncHandler(async (req, res) => {
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient();
+
+    // Prepare file
+    const assetFile = `assets/street.jpeg`;
+    // const file = req.file.path;
+    const imgSize = getImageSize(assetFile);
+    const buffer = fs.readFileSync(assetFile);
+    const request = {
+      image: { content: buffer },
+    };
+
+    // Prepare variables for Vision API
+    const apiRes: JSONResponse = { detectRes: [], url: "" };
+
+    // Call Vision API for Object Detection
+    const [result] = await client.objectLocalization(request);
+    const objects = result.localizedObjectAnnotations;
+
+    // Process each returned object
+    objects.forEach((object) => {
+      const resObj = <ResponseObj>{};
+      // logger.debug(`Name: ${object.name}`);
+      // logger.debug(`Confidence: ${object.score}`);
+      resObj.name = object.name;
+      resObj.confidence = object.score.toString();
+      resObj.bounds = [];
+
+      const vertices = object.boundingPoly.normalizedVertices;
+      vertices.forEach((v) => {
+        const vertex: Vertex = <Vertex>{};
+        // logger.debug(`x: ${v.x}, y:${v.y}`);
+        vertex.x = v.x;
+        vertex.y = v.y;
+        resObj.bounds.push(vertex);
+      });
+      apiRes.detectRes.push(resObj);
+    });
+
+    // Draw bounding boxes and include image in the response to caller
+    apiRes.url = await drawBoundingBoxes(buffer, imgSize, apiRes.detectRes);
+    res.status(HTTP_OK).send(apiRes);
   });
 }
 
@@ -185,6 +195,7 @@ async function drawBoundingBoxes(
     // For each bounding box, we generate an SVG rectangle as described here:
     // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
     // The order of vertices stored in ResponseObj started from bottom left of the box, and goes anti-clockwise.
+    // The bounds are from NormalizedVertices, which requires multiplication with image dimension to get the actual coordinates on image.
     const width = (obj.bounds[1].x - obj.bounds[0].x) * imageSize.width;
     const height = (obj.bounds[3].y - obj.bounds[0].y) * imageSize.height;
     const svgRec =
@@ -193,17 +204,17 @@ async function drawBoundingBoxes(
       `" width="` +
       width +
       `" x="` +
-      obj.bounds[0].x +
+      obj.bounds[0].x * imageSize.width +
       `" y="` +
-      obj.bounds[0].y +
+      obj.bounds[0].y * imageSize.height +
       `"
   style="fill: none; stroke: ` +
       boxColor +
       `; stroke-width: 5"/>`;
-    logger.debug(svgRec);
     svgRectangles.push(svgRec);
   });
 
+  logger.debug(svgRectangles);
   const image = sharp(imageBuffer);
   const metadata = await image.metadata();
 
@@ -232,8 +243,8 @@ async function drawBoundingBoxes(
     .composite([{ input: svgElementBuffer }])
     .toBuffer();
 
-  logger.debug("Before writeFileS3");
-  await writeFileS3(s3client, outputbuffer, "processedImage");
+  await writeFileS3(s3client, outputbuffer, PROCESS_IMAGE_NAME);
+  return await getPreSignedURL(s3client, PROCESS_IMAGE_NAME);
 }
 
 /**
@@ -251,4 +262,19 @@ async function writeFileS3(s3client: AWS.S3, fileContent: Buffer, fileName) {
   };
 
   await s3client.upload(s3UploadParams).promise();
+}
+
+/**
+ * Get pre-signed URL for accessing the S3 object.
+ * @param s3client
+ * @param fileName
+ */
+async function getPreSignedURL(s3client: AWS.S3, fileName) {
+  // Setting up S3 upload parameters
+  const s3params = {
+    Bucket: BUCKET_NAME,
+    Key: fileName,
+  };
+
+  return await s3client.getSignedUrlPromise("getObject", s3params);
 }

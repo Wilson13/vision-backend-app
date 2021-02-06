@@ -31,7 +31,7 @@ This step is currently performed during the build process in the AWS CodeBuild (
 
     npm run deploy-dev
 
-When deploying locally, be sure to run the following command so the build source can run in AWS Lambda successfully. [Check reason here](Deployment]).
+When deploying locally, be sure to run the following command so the build source can run in AWS Lambda successfully. [Check reason here](#deployment]).
 
     rm -rf node_modules/sharp
     SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
@@ -49,6 +49,7 @@ Currently CI/CD pipeline is deployed using AWS CodePipeline and AWS CodeBuild, d
 ## TODO
 
 - Still haven't figured a good way to reference Google Cloud Service Account key JSON file properly. Have tried downloading it and saving to file from AWS SSM Paremeter Store, but so far has failed to move it into the eventual deployed Lambda function's '/tmp' directory.
+- Drawing bounding boxes on uploaded and detected image works now, but not sure why some times one of the boxes is missing.
 
 ## References
 

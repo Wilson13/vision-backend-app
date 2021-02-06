@@ -3,6 +3,7 @@ import multer from "multer";
 import * as detectController from "../controllers/detect";
 const router = express.Router();
 
+const maxSize = 1 * 1024 * 614.4; // 1MB
 const storage = multer.diskStorage({
   destination: "/tmp/",
   // destination: "./uploads/",
@@ -23,7 +24,7 @@ const upload = multer({
   // dest: "/tmp/",
   storage: storage,
   fileFilter: multerFilter,
-  // limits: { fileSize: maxSize },
+  limits: { fileSize: maxSize },
 }).single("image");
 
 router.post(
@@ -37,7 +38,7 @@ router.post(
   "/test",
   // upload,
   // notificationController.validate(),
-  detectController.detectObjectTest()
+  detectController.detectObjectAssetImage()
 );
 
 export default router;
