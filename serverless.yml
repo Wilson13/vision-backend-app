@@ -22,7 +22,7 @@ provider:
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
     # S3 Bucket
-    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-{self:service}
+    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-${self:service}
     GOOGLE_APPLICATION_CREDENTIALS: "key/sa-key.json" #lambda provides only /tmp/ directory
 package:
   exclude:
@@ -42,6 +42,6 @@ functions:
           method: POST
           cors: true
       - http:
-          path: detect_test
+          path: detect_test/test
           method: POST
           cors: true

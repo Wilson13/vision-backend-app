@@ -35,7 +35,7 @@ router.post(
 
 router.post(
   "/test",
-  upload,
+  // upload,
   // notificationController.validate(),
   detectController.detectObjectTest()
 );
