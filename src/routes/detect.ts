@@ -33,4 +33,11 @@ router.post(
   detectController.detectObject()
 );
 
+router.post(
+  "/test",
+  // upload,
+  // notificationController.validate(),
+  detectController.detectObjectTest()
+);
+
 export default router;

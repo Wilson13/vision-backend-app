@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
 import getImageSize from "image-size";
 import fs from "fs";
-import Sharp from "Sharp";
+import sharp from "sharp";
 import vision from "@google-cloud/vision";
 
 import { RequestHandler } from "express";
@@ -86,8 +86,8 @@ export function detectObject(): RequestHandler {
     // Process each returned object
     objects.forEach((object) => {
       const resObj = <ResponseObj>{};
-      logger.debug(`Name: ${object.name}`);
-      logger.debug(`Confidence: ${object.score}`);
+      // logger.debug(`Name: ${object.name}`);
+      // logger.debug(`Confidence: ${object.score}`);
       resObj.name = object.name;
       resObj.confidence = object.score.toString();
       resObj.bounds = [];
@@ -95,7 +95,54 @@ export function detectObject(): RequestHandler {
       const vertices = object.boundingPoly.vertices;
       vertices.forEach((v) => {
         const vertex: Vertex = <Vertex>{};
-        logger.debug(`x: ${v.x}, y:${v.y}`);
+        // logger.debug(`x: ${v.x}, y:${v.y}`);
+        vertex.x = v.x;
+        vertex.y = v.y;
+        resObj.bounds.push(vertex);
+      });
+      resJSON.push(resObj);
+    });
+
+    // TODO: Draw bounding boxes and include image in the response to caller
+    // await drawBoundingBoxes(buffer, imgSize, resJSON);
+    res.status(HTTP_OK).send(resJSON);
+  });
+}
+
+export function detectObjectTest(): RequestHandler {
+  return asyncHandler(async (req, res) => {
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient();
+
+    // Prepare file
+    const assetFile = `assets/street.jpeg`;
+    // const file = req.file.path;
+    const imgSize = getImageSize(assetFile);
+    const buffer = fs.readFileSync(assetFile);
+    const request = {
+      image: { content: buffer },
+    };
+
+    // Prepare variables for Vision API
+    const resJSON: ResponseObj[] = [];
+
+    // Call Vision API for Object Detection
+    const [result] = await client.objectLocalization(request);
+    const objects = result.localizedObjectAnnotations;
+
+    // Process each returned object
+    objects.forEach((object) => {
+      const resObj = <ResponseObj>{};
+      // logger.debug(`Name: ${object.name}`);
+      // logger.debug(`Confidence: ${object.score}`);
+      resObj.name = object.name;
+      resObj.confidence = object.score.toString();
+      resObj.bounds = [];
+
+      const vertices = object.boundingPoly.normalizedVertices;
+      vertices.forEach((v) => {
+        const vertex: Vertex = <Vertex>{};
+        // logger.debug(`x: ${v.x}, y:${v.y}`);
         vertex.x = v.x;
         vertex.y = v.y;
         resObj.bounds.push(vertex);
@@ -128,8 +175,9 @@ async function drawBoundingBoxes(
   // Will generate an array of SVG rectangles
   const svgRectangles: string[] = [];
   // console.log(imageFile);
-  console.log(imageSize);
-  console.log(resObjs);
+  logger.debug(imageSize);
+  logger.debug(resObjs);
+
   resObjs.forEach((obj) => {
     // Generate a new random hex color for each bounding box
     const boxColor = "#" + Math.floor(Math.random() * 16777215).toString(16); // Will be something like #FF9900
@@ -137,25 +185,26 @@ async function drawBoundingBoxes(
     // For each bounding box, we generate an SVG rectangle as described here:
     // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
     // The order of vertices stored in ResponseObj started from bottom left of the box, and goes anti-clockwise.
-    const width = obj.bounds[3].y - obj.bounds[0].y;
-    const height = obj.bounds[1].x - obj.bounds[0].x;
-    svgRectangles.push(
+    const width = (obj.bounds[1].x - obj.bounds[0].x) * imageSize.width;
+    const height = (obj.bounds[3].y - obj.bounds[0].y) * imageSize.height;
+    const svgRec =
       ` <rect height="` +
-        height +
-        `" width="` +
-        width +
-        `" x="` +
-        obj.bounds[0].x +
-        `" y="` +
-        obj.bounds[0].y +
-        `"
-      style="fill: none; stroke: ` +
-        boxColor +
-        `; stroke-width: 5"/>`
-    );
+      height +
+      `" width="` +
+      width +
+      `" x="` +
+      obj.bounds[0].x +
+      `" y="` +
+      obj.bounds[0].y +
+      `"
+  style="fill: none; stroke: ` +
+      boxColor +
+      `; stroke-width: 5"/>`;
+    logger.debug(svgRec);
+    svgRectangles.push(svgRec);
   });
 
-  const image = Sharp(imageBuffer);
+  const image = sharp(imageBuffer);
   const metadata = await image.metadata();
 
   let svgElement =
@@ -173,7 +222,7 @@ async function drawBoundingBoxes(
 
   // The SVG string we have crafted above needs to be converted into a Buffer object
   // so that we can use Sharp to overlay it with our image buffer
-  const svgElementBuffer = new Buffer(svgElement);
+  const svgElementBuffer = Buffer.from(svgElement);
 
   // Create a random file name for the rendered image file we will create
   // Note we are assuming all images being passed in are JPEGs to keep things simple
@@ -183,6 +232,7 @@ async function drawBoundingBoxes(
     .composite([{ input: svgElementBuffer }])
     .toBuffer();
 
+  logger.debug("Before writeFileS3");
   await writeFileS3(s3client, outputbuffer, "processedImage");
 }
 

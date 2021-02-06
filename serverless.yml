@@ -5,11 +5,6 @@ custom:
   log-level:
     dev: debug
     prod: info
-  bundle:
-    packagerOptions:
-      scripts:
-        - rm -rf node_modules/sharp
-        - npm install --arch=x64 --platform=linux sharp
 provider:
   name: aws
   runtime: nodejs12.x
@@ -27,8 +22,8 @@ provider:
     AWS_SIGNED_URL_EXPIRES: "900"
     APP_AWS_REGION: ap-southeast-1
     # S3 Bucket
-    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-{self:service}
-    GOOGLE_APPLICATION_CREDENTIALS: ".key/sa-key.json"
+    AWS_S3_BUCKET_NAME: ${opt:stage, self:provider.stage, 'dev'}-${self:service}
+    GOOGLE_APPLICATION_CREDENTIALS: "key/sa-key.json" #lambda provides only /tmp/ directory
 package:
   exclude:
     - src/**
@@ -44,5 +39,9 @@ functions:
     events:
       - http:
           path: detect
+          method: POST
+          cors: true
+      - http:
+          path: detect_test/test
           method: POST
           cors: true
