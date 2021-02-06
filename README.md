@@ -31,7 +31,7 @@ This step is currently performed during the build process in the AWS CodeBuild (
 
     npm run deploy-dev
 
-When deploying locally, be sure to run the following command so the build source can run in AWS Lambda successfully. [Check reason here](Deployment]).
+When deploying locally, be sure to run the following command so the build source can run in AWS Lambda successfully. [Check reason here](#deployment]).
 
     rm -rf node_modules/sharp
     SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp

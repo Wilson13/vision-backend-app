@@ -185,6 +185,7 @@ async function drawBoundingBoxes(
     // For each bounding box, we generate an SVG rectangle as described here:
     // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
     // The order of vertices stored in ResponseObj started from bottom left of the box, and goes anti-clockwise.
+    // The bounds are from NormalizedVertices, which requires multiplication with image dimension to get the actual coordinates on image.
     const width = (obj.bounds[1].x - obj.bounds[0].x) * imageSize.width;
     const height = (obj.bounds[3].y - obj.bounds[0].y) * imageSize.height;
     const svgRec =
@@ -193,9 +194,9 @@ async function drawBoundingBoxes(
       `" width="` +
       width +
       `" x="` +
-      obj.bounds[0].x +
+      obj.bounds[0].x * imageSize.width +
       `" y="` +
-      obj.bounds[0].y +
+      obj.bounds[0].y * imageSize.height +
       `"
   style="fill: none; stroke: ` +
       boxColor +
