@@ -12,3 +12,6 @@ export const DEVELOPMENT_ENV = "dev";
 
 // S3 prefixes
 export const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+
+// Store only one image at a time regardless of how many times object detection has run
+export const PROCESS_IMAGE_NAME = "processedImage";

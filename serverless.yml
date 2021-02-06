@@ -7,6 +7,13 @@ custom:
     prod: info
 provider:
   name: aws
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - s3:*
+      Resource:
+        - "arn:aws:s3:::${self:provider.environment.AWS_S3_BUCKET_NAME}"
+        - "arn:aws:s3:::${self:provider.environment.AWS_S3_BUCKET_NAME}/*"
   runtime: nodejs12.x
   apiGateway:
     binaryMediaTypes:
