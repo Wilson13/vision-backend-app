@@ -21,7 +21,6 @@ const multerFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  // dest: "/tmp/",
   storage: storage,
   fileFilter: multerFilter,
   limits: { fileSize: maxSize },
@@ -34,11 +33,6 @@ router.post(
   detectController.detectObject()
 );
 
-router.post(
-  "/test",
-  // upload,
-  // notificationController.validate(),
-  detectController.detectObjectAssetImage()
-);
+router.post("/test", detectController.detectObjectAssetImage());
 
 export default router;

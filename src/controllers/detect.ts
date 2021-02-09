@@ -5,17 +5,10 @@ import sharp from "sharp";
 import vision from "@google-cloud/vision";
 
 import { RequestHandler } from "express";
-import isEmpty from "validator/lib/isEmpty";
 
 import asyncHandler from "../utils/async_handler";
-import { CustomError } from "../utils/helper";
 import { logger } from "../utils/logger";
-import {
-  HTTP_OK,
-  HTTP_BAD_REQUEST,
-  BUCKET_NAME,
-  PROCESS_IMAGE_NAME,
-} from "../utils/constants";
+import { HTTP_OK, BUCKET_NAME, PROCESS_IMAGE_NAME } from "../utils/constants";
 import { ISize } from "image-size/dist/types/interface";
 
 type Vertex = {
@@ -34,51 +27,12 @@ type JSONResponse = {
   url: string;
 };
 
-/**
- * Validator middleware for notifications API
- * Note:
- * It is safe to use validator for fields sanitized because sanitize() function has
- * ensured the body fields are string (or empty string e.g. '') instead of undefined.
- *
- * If not, isEmpty will not work for fields that are undefined.
- */
-export function validate(): RequestHandler {
-  return (req, res, next) => {
-    let errorMsg = "";
-
-    // Check file type
-    if (req.file) {
-      const fileName = req.file.originalname;
-      if (
-        !(
-          fileName.endsWith(".jpeg") ||
-          fileName.endsWith(".jpg") ||
-          fileName.endsWith(".png")
-        )
-      ) {
-        errorMsg = "'image' can only be a jpeg or png file.";
-      }
-    } else {
-      errorMsg = "File with field name 'image' is required.";
-    }
-
-    if (!isEmpty(errorMsg)) {
-      // Pass error to next eror-handling middleware
-      return next(new CustomError(HTTP_BAD_REQUEST, errorMsg, null));
-    } else {
-      // Pass control to next middleware
-      return next();
-    }
-  };
-}
-
 export function detectObject(): RequestHandler {
   return asyncHandler(async (req, res) => {
     // Creates a client
     const client = new vision.ImageAnnotatorClient();
 
     // Prepare file
-    // const assetFile = `assets/street.jpeg`;
     const file = req.file.path;
     const imgSize = getImageSize(file);
     const buffer = fs.readFileSync(file);
@@ -96,8 +50,6 @@ export function detectObject(): RequestHandler {
     // Process each returned object
     objects.forEach((object) => {
       const resObj = <ResponseObj>{};
-      // logger.debug(`Name: ${object.name}`);
-      // logger.debug(`Confidence: ${object.score}`);
       resObj.name = object.name;
       resObj.confidence = object.score.toString();
       resObj.bounds = [];
@@ -105,7 +57,6 @@ export function detectObject(): RequestHandler {
       const vertices = object.boundingPoly.normalizedVertices;
       vertices.forEach((v) => {
         const vertex: Vertex = <Vertex>{};
-        // logger.debug(`x: ${v.x}, y:${v.y}`);
         vertex.x = v.x;
         vertex.y = v.y;
         resObj.bounds.push(vertex);
@@ -126,7 +77,6 @@ export function detectObjectAssetImage(): RequestHandler {
 
     // Prepare file
     const assetFile = `assets/street.jpeg`;
-    // const file = req.file.path;
     const imgSize = getImageSize(assetFile);
     const buffer = fs.readFileSync(assetFile);
     const request = {
@@ -143,8 +93,6 @@ export function detectObjectAssetImage(): RequestHandler {
     // Process each returned object
     objects.forEach((object) => {
       const resObj = <ResponseObj>{};
-      // logger.debug(`Name: ${object.name}`);
-      // logger.debug(`Confidence: ${object.score}`);
       resObj.name = object.name;
       resObj.confidence = object.score.toString();
       resObj.bounds = [];
@@ -152,7 +100,6 @@ export function detectObjectAssetImage(): RequestHandler {
       const vertices = object.boundingPoly.normalizedVertices;
       vertices.forEach((v) => {
         const vertex: Vertex = <Vertex>{};
-        // logger.debug(`x: ${v.x}, y:${v.y}`);
         vertex.x = v.x;
         vertex.y = v.y;
         resObj.bounds.push(vertex);
